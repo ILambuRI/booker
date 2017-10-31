@@ -1,0 +1,8 @@
+RewriteEngine On
+
+# WORK #
+RewriteBase /server/
+RewriteRule (.*) http://192.168.0.15/~user10/booker/server/$1 [P]
+
+# HOME #
+#RewriteRule (.*) http://booker/server/$1 [P]
