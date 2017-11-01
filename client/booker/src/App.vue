@@ -32,7 +32,7 @@
       </div>
     </nav>
     <!-- User information is available for the whole application -->
-    <router-view :user="user" @userEvent="userEvent" />
+    <router-view :user="user" :rooms="rooms" @userEvent="userEvent" />
 
   </div>
 </template>
@@ -56,10 +56,13 @@ export default {
     }
   },
 
-  computed: {
+  watch: {
 
   },
 
+  computed: {
+
+  },
 
   created() {
     if (localStorage['user']) {
@@ -96,7 +99,6 @@ export default {
       })
 
       this.$router.push('/')
-      // location.reload()
     },
 
     getRooms() {

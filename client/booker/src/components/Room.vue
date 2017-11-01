@@ -1,24 +1,53 @@
 <template>
   <div class="row col-md-12 justify-content-md-center">
+        <div class="btn-group btn-group-lg" role="group" aria-label="Basic example">
+          <router-link v-for="(room, key) in rooms" :key="key" :to="'/room/' + room.id">
+            <button v-if="$route.params.id == room.id" type="button" class="btn btn-secondary mr-2">
+              <strong>
+                {{ room.name }}
+              </strong>
+            </button>
+            
+            <button v-if="$route.params.id != room.id" type="button" class="btn btn-secondary mr-2">
+              {{ room.name }}
+            </button>
+          </router-link>
+        </div>
+    <div class="row col-md-12 justify-content-md-center">
+      <div class="col-md-11">
+        
+        <calendar></calendar>
 
-ROOM {{ $route.params.id }}
+      </div>
+      <div class="col-md-1">
+        <router-link :to="'/book/' + $route.params.id">
+          <button type="button" class="btn btn-secondary">Book It!</button>
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import Calendar from './sections/Calendar'
 
 export default {
   name: 'Room',
   data () {
     return {
       URL: URL,
+      roomId : this.$route.params.id
     }
   },
+
+  props: ["user", "rooms"],
 
   watch: {
   },
 
-  props: ["user"],
+  components: {
+    'calendar' : Calendar
+  },
 
   computed: {
   },

@@ -41,7 +41,7 @@ export default {
     }
   },
 
-  props: ["user"],
+  props: ["user", "rooms"],
 
   computed: {
     validBtnAccess() {
@@ -76,7 +76,9 @@ export default {
 
   created() {
     if (this.user.access) {
-      this.$emit('userEvent')
+      // this.$emit('userEvent')
+      location.reload()
+      // this.$router.push('/room/' + this.rooms[0].id)
     }
   },
 
@@ -101,7 +103,8 @@ export default {
           this.user.hash = data.data.hash
 
           localStorage['user'] = JSON.stringify(this.user)
-          this.$emit('userEvent')
+          this.$router.push('/room/' + this.rooms[0].id)
+          // this.$emit('userEvent')
         }
         else {
           let error = 'Error in logIn()'+

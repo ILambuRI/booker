@@ -3,6 +3,7 @@ import Router from 'vue-router'
 
 import LoginPage from '@/components/Login'
 import RoomPage from '@/components/Room'
+import EventFormPage from '@/components/EventForm'
 
 Vue.use(Router)
 
@@ -19,6 +20,13 @@ export default new Router({
       name: 'Room page',
       component: RoomPage
     },
+
+    {
+      path: '/book/:id',
+      name: 'EventForm page',
+      component: EventFormPage
+    },
+
 
 
     // {
