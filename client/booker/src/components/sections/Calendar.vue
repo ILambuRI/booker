@@ -1,31 +1,29 @@
 <template>
-  <div class="container">
       
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th v-on:click="getPrevMonth" scope="col" colspan="2"><<</th>
-            <th scope="col" colspan="3">
-              {{ year }} - {{ month }}
-              <button v-on:click="changeFormat" class="float-right btn btn-outline-dark">
-                {{ format }}
-              </button>
-            </th>
-            <th v-on:click="getNextMonth" scope="col" colspan="2">>></th>
-          </tr>
-        </thead>
-        <thead>
-          <tr v-if="format == 'RU'">
-            <th v-for="(name, key) in ruWeek" :key="key" scope="col"> {{ name }} </th>
-          </tr>
-          <tr v-if="format == 'ENG'">
-            <th v-for="(name, key) in engWeek" :key="key" scope="col"> {{ name }} </th>
-          </tr>
-        </thead>
-          <month v-bind:monthArr="monthArr"></month>
-      </table>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th v-on:click="getPrevMonth" scope="col" colspan="2"><<</th>
+        <th scope="col" colspan="3">
+          {{ year }} - {{ month }}
+          <button v-on:click="changeFormat" class="float-right btn btn-outline-dark">
+            {{ format }}
+          </button>
+        </th>
+        <th v-on:click="getNextMonth" scope="col" colspan="2">>></th>
+      </tr>
+    </thead>
+    <thead>
+      <tr v-if="format == 'RU'">
+        <th v-for="(name, key) in ruWeek" :key="key" scope="col"> {{ name }} </th>
+      </tr>
+      <tr v-if="format == 'ENG'">
+        <th v-for="(name, key) in engWeek" :key="key" scope="col"> {{ name }} </th>
+      </tr>
+    </thead>
+      <month v-bind:monthArr="monthArr"></month>
+  </table>
 
-  </div>
 </template>
 
 <script>

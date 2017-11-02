@@ -1,6 +1,6 @@
 <template>
   <div class="row col-md-12 justify-content-md-center">
-        <div class="btn-group btn-group-lg" role="group" aria-label="Basic example">
+        <div class="btn-group btn-group-lg mb-3" role="group" aria-label="Basic example">
           <router-link v-for="(room, key) in rooms" :key="key" :to="'/room/' + room.id">
             <button v-if="$route.params.id == room.id" type="button" class="btn btn-secondary mr-2">
               <strong>
@@ -20,9 +20,16 @@
 
       </div>
       <div class="col-md-1">
-        <router-link :to="'/book/' + $route.params.id">
-          <button type="button" class="btn btn-secondary">Book It!</button>
-        </router-link>
+        <div class="btn-group mb-5" role="group" aria-label="Basic example">
+          <router-link :to="'/book/' + $route.params.id">
+            <button type="button" class="btn btn-secondary">Book It!</button>
+          </router-link>
+        </div>
+        <div v-if="user.admin == 1" class="btn-group" role="group" aria-label="Basic example">
+          <router-link :to="'/book/' + $route.params.id">
+            <button type="button" class="btn btn-secondary">Employee List</button>
+          </router-link>
+        </div>
       </div>
     </div>
   </div>

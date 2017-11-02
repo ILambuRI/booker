@@ -3,13 +3,19 @@
 
     <div class="row col-md-4">
       <div class="col-md-12">
+        <div v-if="errorMsg" class="alert alert-danger">
+          <strong>{{ errorMsg }}</strong>
+          <button @click="errorMsg = ''" type="button" class="close" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
         <form>
           <div class="form-group">
             <label>Name</label>
             <input v-model.trim="name" type="text" class="form-control" placeholder="Enter your name">
             <small v-if="name == ''" class="form-text text-muted">Start whith latin, one space between words is allowed (3 - 50 characters) ...</small>
             <small v-if="!validName & name.length > 0" class="form-text text-danger">Not yet correct ...</small>
-            <small v-if="validName" class="form-text text-success">Сorrectly!</small>
+            <small v-if="validName" class="form-text text-success"><strong>Сorrectly!</strong></small>
           </div>
 
           <div class="form-group">
@@ -17,7 +23,7 @@
             <input v-model.trim="password" type="password" class="form-control" placeholder="Enter your password">
             <small v-if="password == ''" class="form-text text-muted">Only latin and numbers (5 - 32 characters) ...</small>
             <small v-if="!validPassword & password.length > 0" class="form-text text-danger">Not yet correct ...</small>
-            <small v-if="validPassword" class="form-text text-success">Сorrectly!</small>
+            <small v-if="validPassword" class="form-text text-success"><strong>Сorrectly!</strong></small>
           </div>
         </form>
           <button @click="logIn()" class="float-right btn btn-dark" :disabled="!validBtnAccess">
@@ -36,6 +42,7 @@ export default {
   data () {
     return {
       URL: URL,
+      errorMsg: '',
       name: '',
       password: '',
     }
@@ -77,8 +84,10 @@ export default {
   created() {
     if (this.user.access) {
       // this.$emit('userEvent')
-      location.reload()
-      // this.$router.push('/room/' + this.rooms[0].id)
+      // location.reload()
+      // if (this.rooms.length > 0)
+      //   this.$router.push('/room/' + this.rooms[0].id)
+        this.$router.push('/room/1')
     }
   },
 
@@ -103,8 +112,18 @@ export default {
           this.user.hash = data.data.hash
 
           localStorage['user'] = JSON.stringify(this.user)
+
+          if (this.user.admin == 1) {
+            this.$emit('userEvent', 'getAllUsers')
+          }
+
           this.$router.push('/room/' + this.rooms[0].id)
-          // this.$emit('userEvent')
+        }
+        else if (data.server.code == '13') {
+          this.errorMsg = 'Enter the correct name!'
+        }
+        else if (data.server.code == '14') {
+          this.errorMsg = 'Enter the correct password!'
         }
         else {
           let error = 'Error in logIn()'+

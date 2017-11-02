@@ -4,6 +4,52 @@ namespace lib\db\helpers;
 
 class BookerDbCheck
 {
+    
+    /** 
+     * Checking user admin access by hash.
+     * @return bool
+     */
+    static function adminRights($pdo, $hash)
+    {
+        $sql = 'SELECT admin FROM booker_users WHERE hash = :hash';
+        $result = $pdo->execute($sql, ['hash' => $hash]);
+
+        if (!$result or $result[0]['admin'] == 0)
+            return FALSE;
+
+        return TRUE;
+    }
+    
+    /** 
+     * Check id in the table users.
+     * @return bool
+     */
+    static function userId($pdo, $id)
+    {
+        $sql = 'SELECT id FROM booker_users WHERE id = :id';
+        $result = $pdo->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+    
+    /** 
+     * Check id in the table rooms.
+     * @return bool
+     */
+    static function roomId($pdo, $id)
+    {
+        $sql = 'SELECT id FROM booker_rooms WHERE id = :id';
+        $result = $pdo->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+
     /** 
      * Check name in the table.
      * @return bool

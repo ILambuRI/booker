@@ -21,14 +21,25 @@
     <p>[9]: This name already exists in the database | user/Users::postUsers</p>
     <p>[10]: This email already exists in the database | user/Users::postUsers</p>
     
-    <p>[11]: Data has not been validated during registration (name) | user/Users::putUsers</p>
-    <p>[12]: Data has not been validated during registration (password) | user/Users::putUsers</p>
+    <p>[11]: Data has not been validated during authorization (name) | user/Users::putUsers</p>
+    <p>[12]: Data has not been validated during authorization (password) | user/Users::putUsers</p>
     <p>[13]: Name is incorrect (authorization) | user/Users::putUsers</p>
     <p>[14]: Password is incorrect (authorization) | user/Users::putUsers</p>
 
     <p>[15]: The hash was not found in the table | user/Users::deleteUsers</p>
 
-
+    <p>[16]: You do not have administrator rights.</p>
+    
+    <p>[17]: The id was not found in the users table| admin/Users::getUsersByParams</p>
+    
+    <p>[18]: The id was not found in the users table | user/Events::postEvents</p>
+    <p>[19]: The id was not found in the rooms table | user/Events::postEvents</p>
+    <p>[20]: Number of characters must be > 3 (description) | user/Events::postEvents</p>
+    <p>[21]: The start date of the event can not be greater than the end of the event. (difference of at least 30 minutes) | user/Events::postEvents</p>
+    <p>[22]: Can not reserve on the past date or time | user/Events::postEvents</p>
+    <p>[23]: Recurrence for 'Weekly' can only be from 1 to 4 | user/Events::postEvents</p>
+    <p>[24]: Recurrence for 'Bi-weekly' can only be 1 or 2 | user/Events::postEvents</p>
+    
 
 
 
@@ -51,7 +62,6 @@
     <p>[028]: The id was not found in the payment | user/Orders::postOrders</p>
     <p>[029]: No products found in the user's cart | user/Orders::postOrders</p>
     <p>[032]: Transaction error | user/Orders::postOrders</p>
-    <p>[033]: You do not have administrator rights.</p>
     <p>[034]: Data has not been validated (author name) | admin/Authors::postAuthors</p>
     <p>[035]: The id was not found in the authors | admin/Authors::putAuthors</p>
     <p>[036]: Data has not been validated (author name) | admin/Authors::putAuthors</p>

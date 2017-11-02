@@ -32,7 +32,7 @@
       </div>
     </nav>
     <!-- User information is available for the whole application -->
-    <router-view :user="user" :rooms="rooms" @userEvent="userEvent" />
+    <router-view :user="user" :adminData="adminData" :rooms="rooms" @userEvent="userEvent" />
 
   </div>
 </template>
@@ -53,6 +53,9 @@ export default {
         hash: '',
         admin: ''
       },
+      adminData: {
+        allUsers: [],
+      },
     }
   },
 
@@ -68,12 +71,33 @@ export default {
     if (localStorage['user']) {
       this.user = JSON.parse(localStorage['user'])
       this.user.access = true
+
+      if (this.user.admin == 1) {
+        this.getAllUsers()
+      }
     }
 
     this.getRooms()
   },
 
   methods: {
+    getAllUsers() {
+      fetch(this.URL + 'admin/users/' + this.user.hash, {method: 'GET'})
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        if (data.server.status == 200) {
+          this.adminData.allUsers = data.data
+        }
+        else {
+          let error = 'Error in getAllUsers()'+
+                      '\nStatus: ' + data.server.status +
+                      '\nError code: ' + data.server.code +
+                      '\nInfo: ' + data.server.information
+          alert(error)
+        }
+      })
+    },
 
     logOut() {
       localStorage.removeItem("user")
@@ -108,7 +132,7 @@ export default {
       .then((data) => {
         if (data.server.status == 200) {
           this.rooms = data.data
-          this.userEvent()
+          this.userEvent('pushRoom')
         }
         else {
           let error = 'Error in getRooms()'+
@@ -120,9 +144,17 @@ export default {
       })
     },
 
-    userEvent() {
-      if (localStorage['user']) {
-        this.$router.push('/room/' + this.rooms[0].id)
+    userEvent(type) {
+      switch (type) {
+        case 'getAllUsers':
+          this.getAllUsers()
+        break;
+
+        case 'pushRoom':
+          if (localStorage['user']) {
+            this.$router.push('/room/' + this.rooms[0].id)
+          }
+        break;
       }
       // if (localStorage['user']) {
       //   this.user = JSON.parse(localStorage['user'])
