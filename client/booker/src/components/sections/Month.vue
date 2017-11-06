@@ -2,7 +2,7 @@
   <tbody>
     <tr v-for="(week, key) in monthArr" :key="key">
       <td v-for="(day, key) in week" :key="key">
-        <day v-bind:day="day"></day>
+        <day :day="day" :timeFormat='timeFormat' :user="user"></day>
       </td>
     </tr>
   </tbody>
@@ -19,7 +19,7 @@ export default {
     }
   },
 
-  props:['monthArr'],
+  props:['monthArr', 'timeFormat', 'user'],
 
   components:{
     Day

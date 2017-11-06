@@ -7,11 +7,28 @@
     <title>Documentation</title>
 </head>
 <body>
-    <h3>Shop:</h3>
-    <p><strong>authors:</strong></p>
+    <h3>User:</h3>
+    <p><strong>users:</strong></p>
     <p>
-        [GET] bookshop/client/api/shop/authors/ <br>
-        Get all the authors from the table. (grouping by id)
+        [GET] booker/client/api/user/users/name(null or false)/email <br>
+        Checking the name and email in the database.
+        /name (user)
+        /null(or false)/email
+    </p>
+    <p>
+        [POST] booker/client/api/user/users/ <br>
+        Registration - write a new user in table.
+        name | password | email - input.
+    </p>
+    <p>
+        [PUT] booker/client/api/user/users/ <br>
+        Login - user authorization, if it is in the table.
+        name | password - input.
+        Return user info.
+    </p>
+    <p>
+        [DELETE] booker/client/api/user/users/hash <br>
+        Logout - removing (updating) a hash in tables.
     </p>
     </body>
 </html>

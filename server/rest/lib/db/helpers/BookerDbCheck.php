@@ -49,6 +49,21 @@ class BookerDbCheck
 
         return TRUE;
     }
+    
+    /** 
+     * Check id in the table rooms.
+     * @return bool
+     */
+    static function eventId($pdo, $id)
+    {
+        $sql = 'SELECT id FROM booker_events WHERE id = :id';
+        $result = $pdo->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
 
     /** 
      * Check name in the table.
@@ -111,4 +126,25 @@ class BookerDbCheck
 
         return TRUE;
     }
+	
+    /** 
+     * Check user password in the table.
+     * @return bool
+     */
+    static function eventAvailable($pdo, $roomId, $timeStart, $timeEnd)
+    {
+        $sql = "SELECT booker_events.id
+                FROM booker_events
+                WHERE (room_id = $roomId AND booker_events.start <= $timeStart AND $timeStart <= booker_events.end)
+                OR (room_id = $roomId AND booker_events.start <= $timeEnd AND $timeEnd <= booker_events.end)
+                OR (room_id = $roomId AND $timeStart <= booker_events.start AND booker_events.end <= $timeEnd)";
+        $result = $pdo->execute($sql);
+        
+        if (!$result)
+            return TRUE;
+
+        return FALSE;
+    }
+
+
 }

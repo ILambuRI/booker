@@ -110,4 +110,57 @@ class BookerDb
             throw $e;
         }
     }
+
+    /**
+     * Run transaction (with bind parameters).
+     * Return count rows or false.
+     */
+    public function execEventsTransaction($arrParams)
+    {
+        try
+        {
+            /* Start of transaction (all or nothing) */
+            $this->dbh->beginTransaction();
+
+            $this->execute($arrParams[0]['sql'], $arrParams[0]['params']);
+            unset($arrParams[0]);
+            
+            /* Get the last inserted ID*/
+            $lastId = $this->dbh->lastInsertId();
+
+            $this->execute($arrParams[1]['sql'], ['lastId' => $lastId]);
+            unset($arrParams[1]);
+
+            foreach ($arrParams as $record)
+            {
+                $sth = $this->dbh->prepare($record['sql']);
+    
+                $sth->bindParam(':lastId', $lastId);
+
+                // var_dump($record['params']);
+                foreach ($record['params'] as $key => &$value)
+                    $sth->bindParam(':' . $key, $value);
+
+                $sth->execute();
+            }
+
+            /* Fixing the changes */
+            $this->dbh->commit();
+
+            if ($rows = $sth->rowCount())
+                return $rows;
+            else
+            {
+                /* Transaction rollback */
+                $this->dbh->rollBack();
+                return false;
+            }
+        }
+        catch (Exception $e)
+        {
+            /* Transaction rollback */
+            $this->dbh->rollBack();
+            throw $e;
+        }
+    }
 }

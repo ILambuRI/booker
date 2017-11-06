@@ -1,32 +1,41 @@
 <template>
-  <div class="row col-md-12 justify-content-md-center">
-        <div class="btn-group btn-group-lg mb-3" role="group" aria-label="Basic example">
-          <router-link v-for="(room, key) in rooms" :key="key" :to="'/room/' + room.id">
-            <button v-if="$route.params.id == room.id" type="button" class="btn btn-secondary mr-2">
-              <strong>
-                {{ room.name }}
-              </strong>
-            </button>
-            
-            <button v-if="$route.params.id != room.id" type="button" class="btn btn-secondary mr-2">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-2">
+        <h2><span class="badge badge-info">{{ selectedRoom.name }}</span></h2>
+      </div>
+      <div class="col-md-8 text-center">
+        <div class="btn-group btn-group-md mb-3" role="group" aria-label="Basic example">
+          <button v-for="(room, key) in rooms" :key="key"
+                  @click="selectedRoom.id = room.id;
+                          selectedRoom.name = room.name"
+                  type="button" class="btn btn-secondary mr-2">
+            <strong>
               {{ room.name }}
-            </button>
-          </router-link>
+            </strong>
+          </button>
         </div>
-    <div class="row col-md-12 justify-content-md-center">
+      </div>
+      <div class="col-md-1 text-center">
+          <button @click="changeTimeFormat" type="button" class="btn btn-outline-dark">
+            {{ timeFormat }}
+          </button>
+      </div>
+    </div>
+    <div class="row">
       <div class="col-md-11">
         
-        <calendar></calendar>
+        <calendar :selectedRoomId="selectedRoom.id" :timeFormat="timeFormat" :user="user"></calendar>
 
       </div>
       <div class="col-md-1">
         <div class="btn-group mb-5" role="group" aria-label="Basic example">
-          <router-link :to="'/book/' + $route.params.id">
+          <router-link :to="'/book/' + selectedRoom.id + '/' + selectedRoom.name">
             <button type="button" class="btn btn-secondary">Book It!</button>
           </router-link>
         </div>
         <div v-if="user.admin == 1" class="btn-group" role="group" aria-label="Basic example">
-          <router-link :to="'/book/' + $route.params.id">
+          <router-link to="/admin/list-user">
             <button type="button" class="btn btn-secondary">Employee List</button>
           </router-link>
         </div>
@@ -43,11 +52,16 @@ export default {
   data () {
     return {
       URL: URL,
-      roomId : this.$route.params.id
+      rooms: [],
+      timeFormat: 24,
+      selectedRoom: {
+        id: '',
+        name: ''
+      },
     }
   },
 
-  props: ["user", "rooms"],
+  props: ["user"],
 
   watch: {
   },
@@ -60,53 +74,52 @@ export default {
   },
 
   created() {
-    if (!this.user.access) {
-      this.$router.push('/')
-    }
+    this.getRooms()
+    this.$emit('timeIntervalChange', this.timeFormat)
   },
 
   methods: {
-    saveAuthor() {
-      fetch(this.URL + 'admin/authors/', {
-        method: 'POST',
-        headers: {  
-          "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"  
-        },  
-        body: 'hash=' + this.user.hash + '&name=' + this.name
-      })
+    changeTimeFormat() {
+      if (this.timeFormat == 24) {
+        this.timeFormat = 12
+      }
+      else {
+        this.timeFormat = 24
+      }
+
+      this.$emit('timeIntervalChange', this.timeFormat)
+    },
+
+    getRooms() {
+      fetch(this.URL + 'booker/rooms/', {method: 'GET'})
       .then(this.status)
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
-          this.adminEvent('Authors')
+          this.rooms = data.data
+          Object.assign(this.selectedRoom, this.rooms[0])
         }
         else {
-          let error = 'Error in saveAuthor()'+
+          let error = 'Error in getRooms()'+
                       '\nStatus: ' + data.server.status +
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
           alert(error)
         }
       })
-
-      this.name = ''
     },
 
-    adminEvent(type) {
-      this.$emit('adminEvent', type)
-    },
-
-    status(response) { 
+    status(response) {
       if (response.status == 200) {
         return Promise.resolve(response)
       } else {
         console.log('ERROR RESPONSE')
-        return Promise.reject( new Error(response.statusText) )  
+        return Promise.reject( new Error(response.statusText) )
       }
     },
 
     json(response) {
-        return response.json()  
+        return response.json()
     },
   }
 }

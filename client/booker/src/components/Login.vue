@@ -82,13 +82,7 @@ export default {
   },
 
   created() {
-    if (this.user.access) {
-      // this.$emit('userEvent')
-      // location.reload()
-      // if (this.rooms.length > 0)
-      //   this.$router.push('/room/' + this.rooms[0].id)
-        this.$router.push('/room/1')
-    }
+
   },
 
   methods: {
@@ -113,11 +107,7 @@ export default {
 
           localStorage['user'] = JSON.stringify(this.user)
 
-          if (this.user.admin == 1) {
-            this.$emit('userEvent', 'getAllUsers')
-          }
-
-          this.$router.push('/room/' + this.rooms[0].id)
+          this.$router.push('/')
         }
         else if (data.server.code == '13') {
           this.errorMsg = 'Enter the correct name!'

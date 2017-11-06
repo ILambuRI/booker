@@ -58,42 +58,42 @@ class AdminUsers
     }
 
     /**
-     * Write a new user in table.
-     * hash(admin) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
-     * Return 200 or 400+.
+     * Registration - write a new user in table.
+     * hash(admin) | name | password | email - input.
+     * @return bool
      */
     public function postUsers($params)
     {
-        if ( !$this->checkAdminRights($params['hash']) )
-            return $this->error(406, 33);
+        if ( !DbCheck::adminRights($this->db, $params['hash']) )
+            return $this->error(406, 16);
 
-        if ( !Validate::checkLogin($params['login']) )
-            return $this->error(406, 49);
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 6);
 
         if ( !Validate::checkPassword($params['password']) )
-            return $this->error(406, 50);
+            return $this->error(406, 7);
 
-        if ( !Validate::checkPhone($params['phone']) )
-            return $this->error(406, 51);
+        if ( !Validate::checkEmail($params['email']) )
+            return $this->error(406, 8);
 
-        if ( $this->checkLogin($params['login']) )
-            return $this->error(406, 52);
+        if ( DbCheck::name($this->db, $params['name']) )
+            return $this->error(406, 9);
 
-        if ( !$this->checkDiscountId($params['idDiscount']) )
-            return $this->error(404, 53);
-        
-        if ((int)$params['admin'] != 1 && (int)$params['admin'] != 0)
-            return $this->error(406, 54);
-        
-        if ((int)$params['active'] != 1 && (int)$params['active'] != 0)
-            return $this->error(406, 55);
-        
+        if ( DbCheck::email($this->db, $params['email']) )
+            return $this->error(406, 10);
+
+        unset($params['hash']);
+
         $params['password'] = Convert::toMd5($params['password']);
-        $params['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
-        $params['lifetime'] = time();
 
-        $sql = 'INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime, admin, active)
-                VALUES (:login, :password, :phone, :idDiscount, :hash, :lifetime, :admin, :active)';
+        do
+        {
+            $params['hash'] = Convert::toMd5( $params['name'] . rand(12345, PHP_INT_MAX) );
+        }
+        while ( DbCheck::hash($this->db, $params['hash']) );
+
+        $sql = 'INSERT INTO booker_users (name, email, password, hash)
+                VALUES (:name, :email, :password, :hash)';
         $result = $this->db->execute($sql, $params);
 
         if (!$result)
@@ -103,52 +103,68 @@ class AdminUsers
     }
 
     /**
-     * Update user data.
-     * hash(admin) | id(users) | login | password | phone | idDiscount | admin(1 or 0) | active(1 or 0)- input.
-     * Return 200 or 400+.
+     * Registration - write a new user in table.
+     * hash(admin) | id | name | password | email - input.
+     * @return bool
      */
     public function putUsers($params)
     {
-        if ( !$this->checkAdminRights($params['hash']) )
-            return $this->error(406, 33);
+        if ( !DbCheck::adminRights($this->db, $params['hash']) )
+            return $this->error(406, 16);
 
-        if ( !$this->checkUsersId($params['id']) )
-            return $this->error(404, 56);
+        if ( !DbCheck::userId($this->db, $params['id']) )
+            return $this->error(406, 25);
 
-        if ( !Validate::checkLogin($params['login']) )
-            return $this->error(406, 57);
+        if ( !Validate::checkName($params['name']) )
+            return $this->error(406, 26);
 
         if ( !Validate::checkPassword($params['password']) )
-            return $this->error(406, 58);
+            return $this->error(406, 27);
 
-        if ( !Validate::checkPhone($params['phone']) )
-            return $this->error(406, 59);
+        if ( !Validate::checkEmail($params['email']) )
+            return $this->error(406, 28);
 
-        if ( !$this->checkDiscountId($params['idDiscount']) )
-            return $this->error(406, 60);
-        
-        if ((int)$params['admin'] != 1 && (int)$params['admin'] != 0)
-            return $this->error(406, 61);
-        
-        if ((int)$params['active'] != 1 && (int)$params['active'] != 0)
-            return $this->error(406, 62);
-        
+        unset($params['hash']);
+
         $params['password'] = Convert::toMd5($params['password']);
-        $params['hash'] = Convert::toMd5( $params['login'] . rand(12345, PHP_INT_MAX) );
-        $params['lifetime'] = time();
 
-        $sql = 'UPDATE bookshop_users
-                SET login = :login,
-                    password = :password,
-                    phone = :phone,
-                    hash = :hash,
-                    lifetime = :lifetime,
-                    admin = :admin,
-                    active = :active,
-                    id_discount = :idDiscount
-                WHERE id = :id';
+        $sql = 'UPDATE booker_users
+                SET name = :name,
+                    email = :email,
+                    password = :password
+                WHERE id = :id
+                LIMIT 1';
         $result = $this->db->execute($sql, $params);
 
+        if (!$result)
+            return $this->error();
+
+        return TRUE;
+    }
+
+    
+    /**
+     * Delete - removing user in table.
+     * /hash(admin)/id - input
+     * @return bool
+     */
+    public function deleteUsers($params)
+    {
+        list($arrParams['hash'],
+             $arrParams['id']
+        ) = explode('/', $params['params'], 3);
+   
+        if ( !DbCheck::adminRights($this->db, $arrParams['hash']) )
+            return $this->error(406, 16);
+
+        if ( !DbCheck::userId($this->db, $arrParams['id']) )
+            return $this->error(406, 29);
+            
+        $sql = 'DELETE FROM booker_users
+                WHERE id = ' . $arrParams['id'] . 
+                ' LIMIT 1';
+        $result = $this->db->execute($sql);
+        
         if (!$result)
             return $this->error();
 

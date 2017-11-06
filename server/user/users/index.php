@@ -66,46 +66,6 @@ class Users
     }
 
     /**
-     * Registration - write a new user in table.
-     * name | password | email - input.
-     * @return bool
-     */
-    public function postUsers($params)
-    {
-        if ( !Validate::checkName($params['name']) )
-            return $this->error(406, 6);
-
-        if ( !Validate::checkPassword($params['password']) )
-            return $this->error(406, 7);
-
-        if ( !Validate::checkEmail($params['email']) )
-            return $this->error(406, 8);
-
-        if ( DbCheck::name($this->db, $params['name']) )
-            return $this->error(406, 9);
-
-        if ( DbCheck::email($this->db, $params['email']) )
-            return $this->error(406, 10);
-
-        $params['password'] = Convert::toMd5($params['password']);
-
-        do
-        {
-            $params['hash'] = Convert::toMd5( $params['name'] . rand(12345, PHP_INT_MAX) );
-        }
-        while ( DbCheck::hash($this->db, $params['hash']) );
-
-        $sql = 'INSERT INTO booker_users (name, email, password, hash)
-                VALUES (:name, :email, :password, :hash)';
-        $result = $this->db->execute($sql, $params);
-
-        if (!$result)
-            return $this->error();
-
-        return TRUE;
-    }
-
-    /**
      * Login - user authorization, if it is in the table,
      * we write a new hash.
      * name | password - input.

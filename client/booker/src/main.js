@@ -7,6 +7,18 @@ import router from './router'
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
+router.beforeEach((to, from, next) => {
+  if (!localStorage['user'] && to.path != '/login') {
+    next('/login')
+  }
+  else if (to.path == '/login' && localStorage['user']) {
+    next('/')
+  }
+  else {
+    next()
+  }
+})
+
 new Vue({
   el: '#app',
   router,

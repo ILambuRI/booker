@@ -32,7 +32,7 @@
       </div>
     </nav>
     <!-- User information is available for the whole application -->
-    <router-view :user="user" :adminData="adminData" :rooms="rooms" @userEvent="userEvent" />
+    <router-view :user="user" @userEvent="userEvent" :timeInterval="timeInterval" @timeIntervalChange="timeInterval = $event" />
 
   </div>
 </template>
@@ -45,6 +45,7 @@ export default {
     return {
       URL: URL,
       rooms: [],
+      timeInterval: '',
       user: {
         access: false,
         id: '',
@@ -52,9 +53,6 @@ export default {
         email: '',
         hash: '',
         admin: ''
-      },
-      adminData: {
-        allUsers: [],
       },
     }
   },
@@ -71,37 +69,14 @@ export default {
     if (localStorage['user']) {
       this.user = JSON.parse(localStorage['user'])
       this.user.access = true
-
-      if (this.user.admin == 1) {
-        this.getAllUsers()
-      }
     }
-
-    this.getRooms()
   },
 
   methods: {
-    getAllUsers() {
-      fetch(this.URL + 'admin/users/' + this.user.hash, {method: 'GET'})
-      .then(this.status)
-      .then(this.json)
-      .then((data) => {
-        if (data.server.status == 200) {
-          this.adminData.allUsers = data.data
-        }
-        else {
-          let error = 'Error in getAllUsers()'+
-                      '\nStatus: ' + data.server.status +
-                      '\nError code: ' + data.server.code +
-                      '\nInfo: ' + data.server.information
-          alert(error)
-        }
-      })
-    },
-
     logOut() {
       localStorage.removeItem("user")
       this.user.access = false
+      
       fetch(this.URL + 'user/users/' + this.user.hash, {
         method: 'DELETE',
         headers: {  
@@ -112,6 +87,7 @@ export default {
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
+
         }
         else {
           let error = 'Error in logOut()'+
@@ -122,38 +98,13 @@ export default {
         }
       })
 
-      this.$router.push('/')
-    },
-
-    getRooms() {
-      fetch(this.URL + 'booker/rooms/', {method: 'GET'})
-      .then(this.status)
-      .then(this.json)
-      .then((data) => {
-        if (data.server.status == 200) {
-          this.rooms = data.data
-          this.userEvent('pushRoom')
-        }
-        else {
-          let error = 'Error in getRooms()'+
-                      '\nStatus: ' + data.server.status +
-                      '\nError code: ' + data.server.code +
-                      '\nInfo: ' + data.server.information
-          alert(error)
-        }
-      })
+      this.$router.push('/login')
     },
 
     userEvent(type) {
       switch (type) {
         case 'getAllUsers':
           this.getAllUsers()
-        break;
-
-        case 'pushRoom':
-          if (localStorage['user']) {
-            this.$router.push('/room/' + this.rooms[0].id)
-          }
         break;
       }
       // if (localStorage['user']) {

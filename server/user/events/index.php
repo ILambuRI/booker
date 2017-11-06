@@ -26,44 +26,30 @@ class Events
      */
     public function getEventsByParams($params)
     {
-        list($arrParams['name'],
-             $arrParams['email']
-        ) = explode('/', $params['params'], 3);
+        list( $id ) = explode('/', $params['params'], 2);
+
+        if ( !DbCheck::eventId($this->db, $id) )
+            return $this->error(406, 100);
         
-        if ( ($arrParams['name'] != 'false' && $arrParams['name'] != 'null' && $arrParams['name'] != null)
-             &&
-             ($arrParams['email'] == 'false' || $arrParams['email'] == 'null' ||  $arrParams['email'] == null) )
-        {
-            if ( !Validate::checkName($arrParams['name']) )
-                return $this->error(406, 3);
+        $sql = 'SELECT booker_events.id,
+                       booker_events.user_id,
+                       booker_events.room_id,
+                       booker_events.`desc`,
+                       booker_events.start,
+                       booker_events.end,
+                       booker_events.created,
+                       booker_events.event_id
+                FROM booker_events
+                WHERE booker_events.id = :id';
 
-            $sql = 'SELECT name FROM booker_users WHERE name = :name';
-            $result = $this->db->execute($sql, ['name' => $arrParams['name']]);
-            
-            if (!$result)
-                return $this->error();
+        $result = $this->db->execute($sql, ['id' => $id]);
 
-            return TRUE;
-        }
+        if (!$result)
+            return $this->error();
 
-        if ( ($arrParams['email'] != 'false' && $arrParams['email'] != 'null' && $arrParams['email'] != null)
-             &&
-             ($arrParams['name'] == 'false' || $arrParams['name'] == 'null' ||  $arrParams['name'] == null) )
-        {
-            if ( !Validate::checkEmail($arrParams['email']) )
-                return $this->error(406, 4);
-
-            $sql = 'SELECT email FROM booker_users WHERE email = :email';
-            $result = $this->db->execute($sql, ['email' => $arrParams['email']]);
-            
-            if (!$result)
-                return $this->error();
-
-            return TRUE;
-        }
-
-        return $this->error(404, 5);
+        return $result;
     }
+
 
     /**
      * Add new event.
@@ -88,23 +74,111 @@ class Events
         if ( (int)$params['timeStart'] <= (int)$params['timeCreate'] )
             return $this->error(406, 22);
 
-        if ( !$params['type'] == 'Weekly' && ($params['duration'] >= 1 && $params['duration'] <= 4) )
+        if ( $params['type'] == 'Weekly' && !((int)$params['duration'] >= 1 && (int)$params['duration'] <= 4) )
             return $this->error(406, 23);
 
-        if ( !$params['type'] == 'Bi-weekly' && ($params['duration'] == 1 || $params['duration'] == 2) )
+        if ( $params['type'] == 'Bi-weekly' && !((int)$params['duration'] == 1 || (int)$params['duration'] == 2) )
             return $this->error(406, 24);
 
         if ($params['type'] == 'Monthly')
-            $params['duration'] == 1;
+            $params['duration'] = 1;
         
-        $sql = 'INSERT INTO booker_events (user_id, room_id, `desc`, start, end, created, event_id)
-                VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate, :lastId)';
-        $result = $this->db->execute($sql, $params);
+        $operationResult = [];
 
-        if (!$result)
-            return $this->error();
+        if ($params['type'] != 'Weekly' && $params['type'] != 'Bi-weekly' && $params['type'] != 'Monthly')
+        {
+            unset($params['type'], $params['duration']);
 
-        return TRUE;
+            $operationResult[] = [
+                'start' => $params['timeStart'],
+                'end' => $params['timeEnd'],
+                'desc' => $params['desc']
+            ];
+            
+            if ( DbCheck::eventAvailable($this->db, $params['roomId'], $params['timeStart'], $params['timeEnd']) ) {
+                $sql = 'INSERT INTO booker_events (user_id, room_id, `desc`, start, end, created)
+                        VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate)';
+                $result = $this->db->execute($sql, $params);
+
+                $operationResult[0]['success'] = true;
+                return $operationResult;
+            }
+            else
+            {
+                $operationResult[0]['success'] = false;
+                return $operationResult;
+            }
+        }
+        
+        $arrParams = [];
+        $increase = 0;
+
+        if ($params['type'] == 'Weekly')
+        {
+            $increase = $this->getTimeWeek();
+        }
+
+        if ($params['type'] == 'Bi-weekly') {
+            $increase = $this->getTimeWeek(2);
+        }
+
+        if ($params['type'] == 'Monthly') {
+            $increase = $this->getTimeWeek(4);
+        }
+
+        $duration = $params['duration'];
+        unset($params['duration'], $params['type']);
+
+        for ($i=0; $i<=$duration; $i++)
+        {
+            $operationResult[$i] = [
+                'start' => $params['timeStart'],
+                'end' => $params['timeEnd'],
+                'desc' => $params['desc']
+            ];
+
+            if ( DbCheck::eventAvailable($this->db, $params['roomId'], $params['timeStart'], $params['timeEnd']) )
+            {
+                $operationResult[$i]['success'] = true;
+
+                if ( empty($arrParams) )
+                {
+                    $arrParams[0] = [
+                        'sql' => 'INSERT INTO booker_events (user_id, room_id, `desc`, start, end, created)
+                                  VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate)',
+                        'params' => $params
+                    ];
+
+                    $arrParams[1] = ['sql' => 'UPDATE booker_events
+                                               SET event_id = :lastId
+                                               WHERE id = :lastId'
+                    ];                            
+                }
+                else
+                {
+                    $arrParams[] = [
+                        'sql' => 'INSERT INTO booker_events (user_id, room_id, `desc`, start, end, created, event_id)
+                                  VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate, :lastId)',
+                        'params' => $params
+                    ];
+                }
+            }
+            else
+            {
+                $operationResult[$i]['success'] = false;            
+            }
+
+            $params['timeStart'] = $params['timeStart'] + $increase;
+            $params['timeEnd'] = $params['timeEnd'] + $increase;
+        }
+
+        if (empty($arrParams))
+        {
+            return $operationResult;
+        }
+
+        $result = $this->db->execEventsTransaction($arrParams);
+        return $operationResult;
     }
 
     /**
@@ -191,6 +265,11 @@ class Events
 
         return $result[0];
     }
+
+    private function getTimeWeek($cnt = 1)
+    {
+        return 60 * 60 * 24 * 7 * $cnt;
+    }
 }
 
 if (PHP_SAPI !== 'cli')
@@ -198,7 +277,7 @@ if (PHP_SAPI !== 'cli')
     try
     {
         $api = new Rest( new Events );
-        $api->table = 'users';
+        $api->table = 'events';
         $api->play();
     }
     catch (Exception $e)

@@ -1,9 +1,14 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
-import LoginPage from '@/components/Login'
-import RoomPage from '@/components/Room'
-import EventFormPage from '@/components/EventForm'
+import Login from '@/components/Login'
+import Room from '@/components/Room'
+import EventForm from '@/components/EventForm'
+import Employee from '@/components/Employee'
+import EmployeeList from '@/components/sections/EmployeeList'
+import AddUser from '@/components/sections/AddUser'
+import EditUser from '@/components/sections/EditUser'
+import EventDetail from '@/components/EventDetail'
 
 Vue.use(Router)
 
@@ -11,23 +16,38 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Login page',
-      component: LoginPage
-    },
-
-    {
-      path: '/room/:id',
       name: 'Room page',
-      component: RoomPage
+      component: Room
+    },
+    
+    {
+      path: '/login',
+      name: 'Login page',
+      component: Login
     },
 
     {
-      path: '/book/:id',
+      path: '/book/:id/:room_name',
       name: 'EventForm page',
-      component: EventFormPage
+      component: EventForm
     },
 
+    {
+      path: '/event/detail/:id/:timeInterval',
+      name: 'EventDetail page',
+      component: EventDetail
+    },
 
+    {
+      path: '/admin',
+      name: 'Employee List',
+      component: Employee,
+      children: [
+        { path: 'add-user', component: AddUser },
+        { path: 'edit-user/:id', component: EditUser },
+        { path: 'list-user', component: EmployeeList },
+      ]
+    },
 
     // {
     //   path: '/admin',
