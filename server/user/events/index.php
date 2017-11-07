@@ -20,16 +20,16 @@ class Events
     }
     
     /**
-     * /name - сheck for the existence of a name in the table.
-     * /null(or false)/email - Check for the existence of email in the table.
-     * @return bool
+     * Receiving event information by id.
+     * /id - input.
+     * @return array
      */
     public function getEventsByParams($params)
     {
         list( $id ) = explode('/', $params['params'], 2);
 
         if ( !DbCheck::eventId($this->db, $id) )
-            return $this->error(406, 100);
+            return $this->error(406, 31);
 
         $sql = 'SELECT booker_events.id,
                        booker_events.user_id,
@@ -44,17 +44,6 @@ class Events
                 INNER JOIN booker_users
                     ON booker_events.user_id = booker_users.id
                 WHERE booker_events.id = :id';
-        
-        // $sql = 'SELECT booker_events.id,
-        //                booker_events.user_id,
-        //                booker_events.room_id,
-        //                booker_events.`desc`,
-        //                booker_events.start,
-        //                booker_events.end,
-        //                booker_events.created,
-        //                booker_events.event_id
-        //         FROM booker_events
-        //         WHERE booker_events.id = :id';
 
         $result = $this->db->execute($sql, ['id' => $id]);
 
@@ -68,8 +57,8 @@ class Events
     /**
      * Add new event.
      * Inputs:
-     * userId | roomId | desc | timeCreate | timeStart | timeEnd | type | duration
-     * @return bool
+     * userId | roomId | desc | timeCreate | timeStart | timeEnd | type | duration.
+     * @return array
      */
     public function postEvents($params)
     {
@@ -198,10 +187,8 @@ class Events
     }
 
     /**
-     * Login - user authorization, if it is in the table,
-     * we write a new hash.
+     * Event Update(s)
      * name | password - input.
-     * Return user info array whith new hash.
      * @return array
      */
     public function putEvents($params)
@@ -241,7 +228,7 @@ class Events
 
     /**
      * Delete event(s)
-     * /id/false - 1 event
+     * /id(event)/false - 1 event
      * /event_id/true - recurring
      * @return bool
      */
@@ -255,7 +242,7 @@ class Events
         if ($recurring == 'false')
         {
             if ( !DbCheck::eventId($this->db, $id) )
-                return $this->error(406, 100);
+                return $this->error(406, 32);
 
             $sql = "DELETE FROM booker_events
                     WHERE id = :id
@@ -270,7 +257,7 @@ class Events
         if ($recurring == 'true')
         {
             if ( !DbCheck::eventIdParent($this->db, $id) )
-                return $this->error(406, 100);
+                return $this->error(406, 33);
 
             $sql = "DELETE FROM booker_events
                     WHERE event_id = :id
@@ -287,24 +274,6 @@ class Events
         return TRUE;
     }
     
-    /** 
-     * Get user info array.
-     * @return array
-     */
-    private function getUserInfo($hash)
-    {
-        $sql = 'SELECT booker_users.id,
-                       booker_users.name,
-                       booker_users.email,
-                       booker_users.hash,
-                       booker_users.admin
-                FROM booker_users
-                WHERE booker_users.hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $hash]);
-
-        return $result[0];
-    }
-
     private function getTimeWeek($cnt = 1)
     {
         return 60 * 60 * 24 * 7 * $cnt;

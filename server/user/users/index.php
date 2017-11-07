@@ -20,7 +20,7 @@ class Users
     }
     
     /**
-     * /name - сheck for the existence of a name in the table.
+     * /name - check for the existence of a name in the table.
      * /null(or false)/email - Check for the existence of email in the table.
      * @return bool
      */

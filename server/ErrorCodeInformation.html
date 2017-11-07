@@ -35,7 +35,10 @@
     <p>[18]: The id was not found in the users table | user/Events::postEvents</p>
     <p>[19]: The id was not found in the rooms table | user/Events::postEvents</p>
     <p>[20]: Number of characters must be > 3 (description) | user/Events::postEvents</p>
-    <p>[21]: The start date of the event can not be greater than the end of the event. (difference of at least 30 minutes) | user/Events::postEvents</p>
+    <p>
+        [21]: The start date of the event can not be greater than the end of the event.
+        (difference of at least 30 minutes) | user/Events::postEvents
+    </p>
     <p>[22]: Can not reserve on the past date or time | user/Events::postEvents</p>
     <p>[23]: Recurrence for 'Weekly' can only be from 1 to 4 | user/Events::postEvents</p>
     <p>[24]: Recurrence for 'Bi-weekly' can only be 1 or 2 | user/Events::postEvents</p>
@@ -49,6 +52,9 @@
     
     <p>[30]: The id was not found in the rooms table | booker/Events::getEventsByParams</p>
     
+    <p>[31]: The id was not found in the events table | user/Events::getEventsByParams</p>
+    <p>[32]: The id was not found in the events table | user/Events::deleteEvents</p>
+    <p>[33]: The event_id was not found in the events table | user/Events::getEventsByParams</p>
 
 
 

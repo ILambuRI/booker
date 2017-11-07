@@ -33,7 +33,8 @@ class Events
             return $this->error(406, 30);
 
         $dateStart = new DateTime($arrParams['year'] . '-' . $arrParams['month'] . '-1');
-        $days = cal_days_in_month(CAL_GREGORIAN, $arrParams['month'], $arrParams['year']);
+        //$days = cal_days_in_month(CAL_GREGORIAN, $arrParams['month'], $arrParams['year']);
+        $days = date('t', $dateStart->getTimestamp());
         $dateEnd = new DateTime($arrParams['year'] . '-' . $arrParams['month'] . '-' . $days);
         $dateEnd->setTime(23, 59, 59);
 

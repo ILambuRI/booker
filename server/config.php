@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set('Europe/Kiev');
+
 function autoloadClass ($class) 
 {
     $path = __DIR__ . "/rest/" . $class . ".php";
