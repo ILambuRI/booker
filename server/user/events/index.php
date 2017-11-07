@@ -30,7 +30,7 @@ class Events
 
         if ( !DbCheck::eventId($this->db, $id) )
             return $this->error(406, 100);
-        
+
         $sql = 'SELECT booker_events.id,
                        booker_events.user_id,
                        booker_events.room_id,
@@ -38,9 +38,23 @@ class Events
                        booker_events.start,
                        booker_events.end,
                        booker_events.created,
-                       booker_events.event_id
+                       booker_events.event_id,
+                       booker_users.name as user_name
                 FROM booker_events
+                INNER JOIN booker_users
+                    ON booker_events.user_id = booker_users.id
                 WHERE booker_events.id = :id';
+        
+        // $sql = 'SELECT booker_events.id,
+        //                booker_events.user_id,
+        //                booker_events.room_id,
+        //                booker_events.`desc`,
+        //                booker_events.start,
+        //                booker_events.end,
+        //                booker_events.created,
+        //                booker_events.event_id
+        //         FROM booker_events
+        //         WHERE booker_events.id = :id';
 
         $result = $this->db->execute($sql, ['id' => $id]);
 
@@ -85,6 +99,7 @@ class Events
         
         $operationResult = [];
 
+        /* One event */
         if ($params['type'] != 'Weekly' && $params['type'] != 'Bi-weekly' && $params['type'] != 'Monthly')
         {
             unset($params['type'], $params['duration']);
@@ -129,6 +144,7 @@ class Events
         $duration = $params['duration'];
         unset($params['duration'], $params['type']);
 
+        /* Many events */
         for ($i=0; $i<=$duration; $i++)
         {
             $operationResult[$i] = [
@@ -224,23 +240,46 @@ class Events
     }
 
     /**
-     * Logout - removing (updating) a hash in tables.
-     * /hash - input
+     * Delete event(s)
+     * /id/false - 1 event
+     * /event_id/true - recurring
      * @return bool
      */
     public function deleteEvents($params)
     {
-        if ( !DbCheck::hash($this->db, $params['params']) )
-            return $this->error(404, 15);
+        list( $id, $recurring ) = explode('/', $params['params'], 3);
 
-        do
+        $timestampNow = time();
+
+        /* One event */
+        if ($recurring == 'false')
         {
-            $newHash = Convert::toMd5( rand(12345, PHP_INT_MAX) );
-        }
-        while ( DbCheck::hash($this->db, $newHash) );
+            if ( !DbCheck::eventId($this->db, $id) )
+                return $this->error(406, 100);
 
-        $sql = 'UPDATE booker_users SET hash = "' .$newHash. '" WHERE hash = :hash';
-        $result = $this->db->execute($sql, ['hash' => $params['params']]);
+            $sql = "DELETE FROM booker_events
+                    WHERE id = :id
+                    AND start > $timestampNow
+                    AND end > $timestampNow
+                    LIMIT 1";
+
+            $result = $this->db->execute($sql, ['id' => $id]);        
+        }
+
+        /* All events */
+        if ($recurring == 'true')
+        {
+            if ( !DbCheck::eventIdParent($this->db, $id) )
+                return $this->error(406, 100);
+
+            $sql = "DELETE FROM booker_events
+                    WHERE event_id = :id
+                    AND start > $timestampNow
+                    AND end > $timestampNow";
+
+            $result = $this->db->execute($sql, ['id' => $id]);        
+        }
+
         
         if (!$result)
             return $this->error();

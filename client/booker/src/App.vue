@@ -17,14 +17,12 @@
         </ul>
 
         <div v-if="user.access" class="row">
-          <router-link v-if="user.admin == 1" :to="'/admin'" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
+          <router-link v-if="user.admin == 1" :to="'/admin/list-user'" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
             Admin panel
           </router-link>
-          <router-link :to="'/events'">
-            <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
-              {{ user.name }}
-            </button>
-          </router-link>
+          <button type="button" class="btn btn-light mr-sm-1 my-sm-0 text-primary font-weight-bold">
+            {{ user.name }}
+          </button>
           <button @click="logOut()" type="button" class="btn btn-outline-dark mr-sm-2 my-sm-0">
             <i class="fa fa-sign-out" aria-hidden="true"></i>
           </button>

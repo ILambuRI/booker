@@ -1,5 +1,11 @@
 <template>
-  <event-form :user="user" :timeInterval="timeInterval" @eventFormSave="saveEvent" :eventDetail="eventDetail"></event-form>
+  <event-form :user="user"
+              :timeInterval="timeInterval"
+              @eventFormUpdate="updateEvent"
+              @eventFormDelete="deleteEvent"
+              :eventDetail="eventDetail"
+              :deletedSuccess="deletedSuccess">
+  </event-form>
 </template>
 
 <script>
@@ -10,9 +16,11 @@ export default {
   data () {
     return {
       URL: URL,
+      deletedSuccess: false,
       eventDetail: {
         id: '',
         user_id: '',
+        user_name: '',
         created: '',
         desc: '',
         end: '',
@@ -20,7 +28,7 @@ export default {
         event_id: '',
         room_id: ''
       },
-      allUsers: [],
+
       timeInterval: this.$route.params.timeInterval
     }
   },
@@ -36,27 +44,25 @@ export default {
 
   created() {
     this.getEventDetail()
-
-    if (this.user.admin == 1) {
-      this.getAllUsers()
-    }
   },
 
   methods: {
-    saveEvent() {
-
+    updateEvent() {
+      alert('updateEvent')
     },
 
-    getAllUsers() {
-      fetch(this.URL + 'admin/users/' + this.user.hash, {method: 'GET'})
+    deleteEvent(eventParams) {
+      fetch(this.URL + 'user/events/' + eventParams.id + '/' + eventParams.recurring, {method: 'DELETE'})
       .then(this.status)
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
-          this.allUsers = data.data
+          // this.$router.push('/')
+          // alert('DELETED')
+          this.deletedSuccess = true
         }
         else {
-          let error = 'Error in getAllUsers()'+
+          let error = 'Error in deleteEvent()'+
                       '\nStatus: ' + data.server.status +
                       '\nError code: ' + data.server.code +
                       '\nInfo: ' + data.server.information
@@ -72,7 +78,7 @@ export default {
       .then((data) => {
         if (data.server.status == 200) {
           Object.assign(this.eventDetail, data.data[0])
-          console.log(this.eventDetail)
+          // console.log(this.eventDetail)
         }
         else {
           let error = 'Error in getEventDetail()'+

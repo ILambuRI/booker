@@ -1,14 +1,18 @@
 <template>
   <div>
     <div class="row">
-        <div class="col-md-4 div-bordered" v-on:click="getPrevMonth"><<</div>
+        <div class="col-md-4 div-bordered">
+          <button @click="getPrevMonth" type="button" class="btn btn-secondary float-right"><<</button>
+        </div>
         <div class="col-md-4 div-bordered">
           {{ year }} - {{ month }}
-          <button v-on:click="changeFormat" class="float-right btn btn-outline-dark">
+          <button @click="changeFormat" class="float-right btn btn-outline-dark">
             {{ format }}
           </button>
         </div>
-        <div class="col-md-4 div-bordered" v-on:click="getNextMonth">>></div>
+        <div class="col-md-4 div-bordered">
+          <button @click="getNextMonth" type="button" class="btn btn-secondary float-left">>></button>
+        </div>
     </div>
     <div class="row">
       <table class="table table-bordered">
@@ -20,7 +24,7 @@
             <th style="width: 14.29%;" v-for="(name, key) in engWeek" :key="key" scope="col"> {{ name }} </th>
           </tr>
         </thead>
-          <month v-bind:monthArr="monthArr" :timeFormat="timeFormat" :user="user"></month>
+          <month :monthArr="monthArr" :timeFormat="timeFormat" :user="user"></month>
       </table>
     </div>
   </div>
@@ -182,12 +186,16 @@ export default {
           this.getMonthArr()
         }
         else {
-          let error = 'Error in getAllUsers()'+
-                      '\nStatus: ' + data.server.status +
-                      '\nError code: ' + data.server.code +
-                      '\nInfo: ' + data.server.information
-          alert(error)
+          this.allEvents = []
+          this.getMonthArr()
         }
+        // else {
+        //   let error = 'Error in getAllEvents()'+
+        //               '\nStatus: ' + data.server.status +
+        //               '\nError code: ' + data.server.code +
+        //               '\nInfo: ' + data.server.information
+        //   alert(error)
+        // }
       })
     },
 

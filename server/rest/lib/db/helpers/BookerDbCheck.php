@@ -64,6 +64,21 @@ class BookerDbCheck
 
         return TRUE;
     }
+    
+    /** 
+     * Check id in the table rooms.
+     * @return bool
+     */
+    static function eventIdParent($pdo, $id)
+    {
+        $sql = 'SELECT event_id FROM booker_events WHERE event_id = :id';
+        $result = $pdo->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
 
     /** 
      * Check name in the table.

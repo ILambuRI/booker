@@ -3,11 +3,12 @@
     <div class="row col-md-5">
       <div class="col-md-12">
         <h3> Boardroom booker: {{ $route.params.room_name }} </h3>
-        <div v-if="errorMsg" class="alert alert-danger">
-          <strong>{{errorMsg}}</strong>
-          <button @click="errorMsg = ''" type="button" class="close" aria-label="Close">
+        <div v-if="deletedSuccess && eventDetail && eventDetail.start && eventDetail.start.length > 0" class="alert alert-danger">
+          <!-- <strong>{{ deletedMsg }}</strong> -->
+          Event {{ eventDetail.start | formatTime(timeInterval) }} - {{ eventDetail.end | formatTime(timeInterval) }} deleted!
+          <!-- <button @click="deletedSuccess = !deletedSuccess" type="button" class="close" aria-label="Close">
             <span aria-hidden="true">&times;</span>
-          </button>
+          </button> -->
         </div>
         <form>
           <div class="form-group">
@@ -27,20 +28,20 @@
           <div class="form-group">
             <label>2. I wood like to book this meeting:</label>
             <div class="btn-toolbar" role="toolbar">
-              <div class="btn-group col-md-7" role="group">
-                <select @change="createDateOptions()" class="form-control mr-2" v-model="month">
+              <div class="btn-group col-md-12" role="group">
+                <select @change="createDateOptions()" class="form-control" v-model="month" :disabled="eventDetail">
                   <option v-for="(num, key) in monthCount" :key="key" :value="key">
                     {{ num }}
                   </option>
                 </select>
 
-                <select class="form-control mr-2" v-model="day">
+                <select class="form-control" v-model="day" :disabled="eventDetail">
                   <option v-for="(num, key) in daysCount" :key="key" :value="num">
                     {{ num }}
                   </option>
                 </select>
 
-                <select class="form-control mr-2" v-model="year">
+                <select class="form-control" v-model="year" :disabled="eventDetail">
                   <option v-for="(num, key) in yearsCount" :key="key" :value="num">
                     {{ num }}
                   </option>
@@ -53,12 +54,12 @@
           <div class="form-group">
             <label>3. Specify what the time start and end of the meeting (This will be what people see on the calendar.)</label>
             <div class="btn-toolbar" role="toolbar">
-              <div class="btn-group" role="group">
+              <div class="btn-group col-md-12" role="group">
                 <select class="form-control" v-model="eventTime.startHour">
-                  <option v-if="timeInterval == 24" v-for="i in 13" :value="i+7">
+                  <option v-if="timeInterval == 24" v-for="(i, index) in 13" :key="index" :value="i+7">
                     {{ i+7 }}
                   </option>
-                  <option v-if="timeInterval == 12" v-for="(val, key) in hoursCount[hoursCount.selectedStart]" :value="val">
+                  <option v-if="timeInterval == 12" v-for="(val, key) in hoursCount[hoursCount.selectedStart]" :key="key" :value="val">
                     {{ val }}
                   </option>
                 </select>
@@ -79,13 +80,13 @@
           <!-- Dropdowns end time -->
           <div class="form-group">
             <div class="btn-toolbar" role="toolbar">
-              <div class="btn-group" role="group">
+              <div class="btn-group col-md-12" role="group">
                 <select class="form-control" v-model="eventTime.endHour">
-                  <option v-if="timeInterval == 24" v-for="i in 13" :value="i+7">
+                  <option v-if="timeInterval == 24" v-for="(i, index) in 13" :key="index" :value="i+7">
                     {{ i+7 }}
                   </option>
 
-                  <option v-if="timeInterval == 12" v-for="(val, key) in hoursCount[hoursCount.selectedEnd]" :value="val">
+                  <option v-if="timeInterval == 12" v-for="(val, key) in hoursCount[hoursCount.selectedEnd]" :key="key" :value="val">
                     {{ val }}
                   </option>
                 </select>
@@ -112,7 +113,7 @@
           </div>
 
           <!-- Reacurring event -->
-          <div class="form-group">
+          <div v-if="!eventDetail" class="form-group">
             <label>5. Is this going to be a reacurring event?</label>
             <div class="custom-controls-stacked">
               <label class="custom-control custom-radio">
@@ -167,23 +168,96 @@
             </div>
           </div>
 
+          <!-- Update/Delete recurring checkbox -->
+          <div v-if="eventDetail && eventDetail.event_id && eventDetail.event_id.length > 0" class="form-check">
+            <label class="form-check-label">
+              <input type="checkbox" class="form-check-input" v-model="recurringApplyOccurrences">
+              Apply to all occurrences ?
+            </label>
+          </div>
+
         </form>
-          <button @click="saveEvent()" class="float-left btn btn-dark" :disabled="!validBtnAccess">
+          <button v-if="!eventDetail" @click="saveEvent()" class="float-left btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#eventInformation">
             Submit
+          </button>
+          <button v-if="eventDetail && btnDetailAccess" class="float-left btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#deleteConfirm">
+            Delete
+          </button>
+          <button v-if="eventDetail && btnDetailAccess" @click="updateEvent()" class="float-right btn btn-dark" :disabled="!validBtnAccess">
+            Update
           </button>
       </div>
     </div>
+
+    <!-- Modal Submit -->
+    <div class="modal fade" id="eventInformation" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Information about creating events</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div v-if="errorMsg" class="alert alert-danger">
+              <strong>{{errorMsg}}</strong>
+            </div>
+
+            <div v-if="!errorMsg" v-for="(event, index) in eventSubmited" :key="index" class="alert alert-info">
+              <p>
+                {{ index + 1 }}. Event from <strong>{{ event.start }}</strong> to <strong>{{ event.end }}</strong> on {{ event.created }} - <strong>{{ event.success }}</strong>
+              </p>
+              <p>
+                <strong>Description: </strong>{{ event.desc }}</strong>
+              </p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Modal Delete -->
+    <div class="modal fade" id="deleteConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Delete Confirm</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div v-if="errorMsg" class="alert alert-danger">
+            <strong>{{errorMsg}}</strong>
+          </div>
+          <div v-else class="modal-body">
+            Are you sure ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cencel</button>
+            <button v-if="!errorMsg" @click="deleteEvent()" data-dismiss="modal" type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 <script>
   export default {
-    props: ["user", 'timeInterval', "eventDetail"],
+    props: ["user", 'timeInterval', "eventDetail", "eventSubmited", "deletedSuccess"],
   
     data() {
       return {
         URL: URL,
         allUsers: [],
         errorMsg: '',
+        deletedMsg: '',
+
         selectedUserId: '',
         day: '',
         month: '',
@@ -200,6 +274,9 @@
         recurringEvent: false,
         recurringType: '',
         recurringDuration: '',
+
+        recurringApplyOccurrences: false,
+        btnDetailAccess: true,
 
         daysCount: [],
         yearsCount: [],
@@ -219,10 +296,26 @@
           this.selectedUserId = this.eventDetail.user_id
           this.description = this.eventDetail.desc,
           this.parseDate()
+
+          if (this.user.admin == 0) {
+            this.allUsers = []
+            this.allUsers.push( {name: this.eventDetail.user_name, id: this.eventDetail.user_id} )
+            this.selectedUserId = this.eventDetail.user_id
+
+            if (this.eventDetail.user_id != this.user.id) {
+              this.btnDetailAccess = false
+            }
+          }
+
+          this.errorMsg = ''
+          let timestampNow = Math.floor( new Date().getTime() / 1000 )
+          if (this.eventDetail.start < timestampNow) {
+            this.errorMsg = 'You can not delete or update a past event!'
+          }
         },
 
         deep: true
-      }
+      },
     },
 
     created() {
@@ -233,6 +326,11 @@
         this.selectedUserId = this.user.id
       }
 
+        // else if (this.eventDetail && this.eventDetail.desc && this.eventDetail.desc.length > 0) {
+        //   this.allUsers.push( {name: this.eventDetail.user_name, id: this.eventDetail.user_id} )
+        //   this.selectedUserId = this.eventDetail.user_id
+        // }
+      /* PROBLEM */
       if (this.user.admin == 1) {
         this.getAllUsers()
       }
@@ -291,6 +389,19 @@
       },
     },
 
+    filters: {
+      formatTime(value, timeFormat) {
+        if (timeFormat == 24) {
+          let date = new Date(value * 1000)
+          return date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
+        }
+        else {
+          let date = new Date(value * 1000)
+          return date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+        }
+      }
+    },
+
     methods: {
       parseDate() {
         let date = new Date(this.eventDetail.start * 1000)
@@ -298,12 +409,33 @@
         this.month = date.getMonth()
         this.year = date.getFullYear()
 
-        this.eventTime.startHour = date.getHours()
-        this.eventTime.startMinutes = date.getMinutes()
+        if (this.timeInterval == 12) {
+          this.eventTime.startMinutes = date.toLocaleString('en-US', { minute: 'numeric', hour12: true })
 
-        date = new Date(this.eventDetail.end * 1000)
-        this.eventTime.endHour = date.getHours()
-        this.eventTime.endMinutes = date.getMinutes()
+          let hourUs = date.toLocaleString('en-US', { hour: 'numeric', hour12: true })
+          hourUs = hourUs.split(' ')
+
+          this.eventTime.startHour = +hourUs[0]
+          this.hoursCount.selectedStart = hourUs[1].toLowerCase()
+
+          date = new Date(this.eventDetail.end * 1000)
+
+          this.eventTime.endMinutes = date.toLocaleString('en-US', { minute: 'numeric', hour12: true })
+          hourUs = date.toLocaleString('en-US', { hour: 'numeric', hour12: true })
+          hourUs = hourUs.split(' ')
+
+          this.eventTime.endHour = +hourUs[0]
+          this.hoursCount.selectedEnd = hourUs[1].toLowerCase()
+
+        }
+        else {
+          this.eventTime.startHour = date.getHours()
+          this.eventTime.startMinutes = date.getMinutes()
+
+          date = new Date(this.eventDetail.end * 1000)
+          this.eventTime.endHour = date.getHours()
+          this.eventTime.endMinutes = date.getMinutes()
+        }
       },
 
       saveEvent() {
@@ -317,18 +449,25 @@
 
         let startHour = this.eventTime.startHour
         let endHour = this.eventTime.endHour
+        let strDateStart = ''
+        let strDateEnd = ''
+
         if (this.timeInterval == 12) {
           if (this.hoursCount.selectedStart == 'pm' && startHour < 12) {
-            startHour + 12
+            startHour = startHour + 12
           }
 
           if (this.hoursCount.selectedEnd == 'pm' && endHour < 12) {
-            endHour + 12
+            endHour = endHour + 12
           }
+
+          strDateStart = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +startHour+ ':' +this.eventTime.startMinutes+ ':00'
+          strDateEnd = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +endHour+ ':' +this.eventTime.endMinutes+ ':00'
         }
-        
-        let strDateStart = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +this.eventTime.startHour+ ':' +this.eventTime.startMinutes+ ':00'
-        let strDateEnd = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +this.eventTime.endHour+ ':' +this.eventTime.endMinutes+ ':00'
+        else {
+          strDateStart = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +this.eventTime.startHour+ ':' +this.eventTime.startMinutes+ ':00'
+          strDateEnd = 1 + this.month+ '/' +this.day+ '/' +this.year+ ' ' +this.eventTime.endHour+ ':' +this.eventTime.endMinutes+ ':00'
+        }
 
         dataEvent.timeStart = Math.floor( toTimestamp(strDateStart) )
         dataEvent.timeEnd = Math.floor( toTimestamp(strDateEnd) )
@@ -339,8 +478,7 @@
         dataEvent.duration = this.recurringDuration
         dataEvent.roomId = this.$route.params.id
         dataEvent.userId = this.selectedUserId
-        // console.log(dataEvent)
-        // return false
+
         if ( !(1800 + +dataEvent.timeStart <= dataEvent.timeEnd) ) {
           this.errorMsg = 'Enter the correct amount of time!'
         }
@@ -350,6 +488,31 @@
         else {
           this.$emit('eventFormSave', dataEvent)
         }
+      },
+
+      deleteEvent() {
+        // this.deletedSuccess = 'Successfully!'
+        // let timestampNow = new Date().getTime()
+        // if (this.eventDetail.start < timestampNow) {
+        //   this.errorMsg = 'Can not delete on the past date!'
+        // }
+
+        let deleteParams = {}
+        if (!this.recurringApplyOccurrences) {
+          deleteParams.id = this.eventDetail.id
+          deleteParams.recurring = 'false'
+        }
+
+        if (this.recurringApplyOccurrences) {
+          deleteParams.id = this.eventDetail.event_id
+          deleteParams.recurring = 'true'
+        }
+
+        this.$emit('eventFormDelete', deleteParams)
+      },
+
+      updateEvent() {
+        alert('UPDATE')
       },
 
       createDateOptions() {

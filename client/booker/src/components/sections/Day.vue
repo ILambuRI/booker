@@ -6,12 +6,17 @@
         <!-- <a v-if="user.id == event.user_id || user.admin == 1" :href="'/#/event/detail/' + user.id">
           {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
         </a> -->
-        <a v-if="user.id == event.user_id || user.admin == 1" href="" @click.prevent="newWindow(event.id)">
+
+        <!-- <a v-if="user.id == event.user_id || user.admin == 1" href="" @click.prevent="newWindow(event.id)">
+          {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
+        </a> -->
+        <!-- <span v-else>
+          {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
+        </span> -->
+
+        <a href="" @click.prevent="newWindow(event.id)">
           {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
         </a>
-        <span v-else>
-          {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
-        </span>
       </p>
     </div>
   </div>
@@ -32,18 +37,18 @@ export default {
     formatTime(value, timeFormat) {
       if (timeFormat == 24) {
         let date = new Date(value * 1000)
-        return date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true });
+        return date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
       }
       else {
         let date = new Date(value * 1000)
-        return date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+        return date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
       }
     }
   },
 
   methods: {
     newWindow(id) {
-      window.open('/#/event/detail/' + id + '/' + this.timeFormat, 'Event Details','left=20,top=20,width=500,height=500,toolbar=1,resizable=0')
+      window.open('/#/event/detail/' + id + '/' + this.timeFormat, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
     }
   }
 }

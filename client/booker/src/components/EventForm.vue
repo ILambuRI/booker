@@ -1,5 +1,5 @@
 <template>
-  <event-form :user="user" :timeInterval="timeInterval" @eventFormSave="saveEvent"></event-form>
+  <event-form :user="user" :timeInterval="timeInterval" @eventFormSave="saveEvent" :eventSubmited="eventSubmited"></event-form>
 </template>
 <script>
   import EventForm from './sillyComponents/EventForm'
@@ -14,10 +14,41 @@
     data() {
       return {
         URL: URL,
+        eventSubmited: []
       }
     },
 
     methods: {
+      parseDateSubmited() {
+        let date = null
+        for (let i=0, len=this.eventSubmited.length; i<len; i++) {
+          date = new Date(this.eventSubmited[i].start * 1000)
+          if (this.timeInterval == 12) {
+            this.eventSubmited[i].start = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+          }
+          else {
+            this.eventSubmited[i].start = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
+          }
+
+          date = new Date(this.eventSubmited[i].end * 1000)
+          if (this.timeInterval == 12) {
+            this.eventSubmited[i].end = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+          }
+          else {
+            this.eventSubmited[i].end = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
+          }
+
+          if (this.eventSubmited[i].success == true) {
+            this.eventSubmited[i].success = 'Created'
+          }
+          else {
+            this.eventSubmited[i].success = 'Not Created'
+          }
+
+          this.eventSubmited[i].created = date.toLocaleDateString()
+        }
+      },
+
       saveEvent(dataEvent) {
         fetch(this.URL + 'user/events/', {
           method: 'POST',
@@ -32,7 +63,10 @@
         .then(this.json)
         .then((data) => {
           if (data.server.status == 200) {
-            console.log(data)
+            this.eventSubmited = []
+            this.eventSubmited = data.data
+            this.parseDateSubmited()
+            // console.log(this.eventSubmited)
           }
           else {
             let error = 'Error in saveUser()'+
