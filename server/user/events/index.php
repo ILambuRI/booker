@@ -188,7 +188,7 @@ class Events
 
     /**
      * Event Update(s)
-     * hash | userId | eventId | startHour | startMinutes | endHour | endMinutes | desc | reacurring - input.
+     * hash | userId | roomId | eventId | startHour | startMinutes | endHour | endMinutes | desc | reacurring - input.
      * @return array
      */
     public function putEvents($params)
@@ -234,7 +234,7 @@ class Events
             if ( !(1800 + $newStartHour <= $newEndHour) )
                 return $this->error(406, 21);
 
-            if ( !DbCheck::eventAvailableForUpdate($this->db, $params['eventId'], $newStartHour, $newEndHour) )
+            if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $params['eventId'], $newStartHour, $newEndHour) )
                 return $this->error(404, 3242452);
             
             $arrParams['start'] = $newStartHour;
@@ -289,7 +289,7 @@ class Events
                 if ( !(1800 + $newStartHour <= $newEndHour) )
                     return $this->error(406, 21);
 
-                if ( !DbCheck::eventAvailableForUpdate($this->db, $value['id'], $newStartHour, $newEndHour) )
+                if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $value['id'], $newStartHour, $newEndHour) )
                     return $this->error(404, 3242);
 
                 $arrParams['start'] = $newStartHour;

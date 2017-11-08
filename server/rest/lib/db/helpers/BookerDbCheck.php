@@ -185,14 +185,14 @@ class BookerDbCheck
      * Check user password in the table.
      * @return bool
      */
-    static function eventAvailableForUpdate($pdo, $id, $timeStart, $timeEnd)
+    static function eventAvailableForUpdate($pdo, $roomId, $eventId, $timeStart, $timeEnd)
     {
         $sql = "SELECT booker_events.id
                 FROM booker_events
-                WHERE ( (booker_events.start <= $timeStart AND $timeStart <= booker_events.end)
-                OR (booker_events.start <= $timeEnd AND $timeEnd <= booker_events.end)
-                OR ($timeStart <= booker_events.start AND booker_events.end <= $timeEnd) )
-                AND booker_events.id <> $id";
+                WHERE ( (room_id = $roomId AND booker_events.start <= $timeStart AND $timeStart <= booker_events.end)
+                OR (room_id = $roomId AND booker_events.start <= $timeEnd AND $timeEnd <= booker_events.end)
+                OR (room_id = $roomId AND $timeStart <= booker_events.start AND booker_events.end <= $timeEnd) )
+                AND booker_events.id <> $eventId";
         $result = $pdo->execute($sql);
         
         if (!$result)
