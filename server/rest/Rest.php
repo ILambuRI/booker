@@ -64,7 +64,7 @@ class Rest
 			break;
 
 			default:
-				$this->response('', 406, '0');
+				$this->response('', 406, '00');
 			break;
 		}
 	}

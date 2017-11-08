@@ -1,8 +1,8 @@
 <template>
   <div>
     <p class="font-weight-bold">{{ day['day'] }}</p>
-    <div class="day-events">
-      <p v-for="(event, key) in day.events" :key="key">
+    <div class="day-events font-weight-bold">
+      <span v-for="(event, key) in day.events" :key="key">
         <!-- <a v-if="user.id == event.user_id || user.admin == 1" :href="'/#/event/detail/' + user.id">
           {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
         </a> -->
@@ -17,7 +17,8 @@
         <a href="" @click.prevent="newWindow(event.id)">
           {{ event.start | formatTime(timeFormat) }} - {{ event.end | formatTime(timeFormat) }}
         </a>
-      </p>
+        <br>
+      </span>
     </div>
   </div>
 </template>
@@ -48,7 +49,9 @@ export default {
 
   methods: {
     newWindow(id) {
-      window.open('/#/event/detail/' + id + '/' + this.timeFormat, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
+      var new_window = window.open('/#/event/detail/' + id + '/' + this.timeFormat, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
+      // var new_window = window.open('some url')
+      new_window.onbeforeunload = function(){ console.log('JOPA') }
     }
   }
 }
@@ -57,5 +60,8 @@ export default {
 .day-events {
   height: 81px;
   overflow: auto;
+}
+.day-events a {
+  font-size: x-small;
 }
 </style>

@@ -3,13 +3,6 @@
     <div class="row col-md-5">
       <div class="col-md-12">
         <h3> Boardroom booker: {{ $route.params.room_name }} </h3>
-        <div v-if="deletedSuccess && eventDetail && eventDetail.start && eventDetail.start.length > 0" class="alert alert-danger">
-          <!-- <strong>{{ deletedMsg }}</strong> -->
-          Event {{ eventDetail.start | formatTime(timeInterval) }} - {{ eventDetail.end | formatTime(timeInterval) }} deleted!
-          <!-- <button @click="deletedSuccess = !deletedSuccess" type="button" class="close" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button> -->
-        </div>
         <form>
           <div class="form-group">
             <label>1. Booked for:</label>
@@ -237,9 +230,18 @@
           <div v-else class="modal-body">
             Are you sure ?
           </div>
+
+          <div v-if="eventDeleted && eventDeleted[0].start" v-for="(event, index) in eventDeleted" :key="index" class="alert alert-info">
+            <p>
+              {{ index + 1 }}. Event from <strong>{{ event.start }}</strong> to <strong>{{ event.end }}</strong> on {{ event.created }} - <strong>Deleted</strong>
+            </p>
+            <p>
+              <strong>Description: </strong>{{ event.desc }}</strong>
+            </p>
+          </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cencel</button>
-            <button v-if="!errorMsg" @click="deleteEvent()" data-dismiss="modal" type="button" class="btn btn-primary">Yes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button v-if="!errorMsg" @click="deleteEvent()" type="button" class="btn btn-primary">Yes</button>
           </div>
         </div>
       </div>
@@ -249,14 +251,13 @@
 </template>
 <script>
   export default {
-    props: ["user", 'timeInterval', "eventDetail", "eventSubmited", "deletedSuccess"],
+    props: ["user", 'timeInterval', "eventDetail", "eventSubmited", "eventDeleted"],
   
     data() {
       return {
         URL: URL,
         allUsers: [],
         errorMsg: '',
-        deletedMsg: '',
 
         selectedUserId: '',
         day: '',
@@ -389,19 +390,6 @@
       },
     },
 
-    filters: {
-      formatTime(value, timeFormat) {
-        if (timeFormat == 24) {
-          let date = new Date(value * 1000)
-          return date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
-        }
-        else {
-          let date = new Date(value * 1000)
-          return date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
-        }
-      }
-    },
-
     methods: {
       parseDate() {
         let date = new Date(this.eventDetail.start * 1000)
@@ -491,20 +479,14 @@
       },
 
       deleteEvent() {
-        // this.deletedSuccess = 'Successfully!'
-        // let timestampNow = new Date().getTime()
-        // if (this.eventDetail.start < timestampNow) {
-        //   this.errorMsg = 'Can not delete on the past date!'
-        // }
-
+        this.errorMsg = 'Result:'
         let deleteParams = {}
+        deleteParams.id = this.eventDetail.id
         if (!this.recurringApplyOccurrences) {
-          deleteParams.id = this.eventDetail.id
           deleteParams.recurring = 'false'
         }
 
         if (this.recurringApplyOccurrences) {
-          deleteParams.id = this.eventDetail.event_id
           deleteParams.recurring = 'true'
         }
 
@@ -512,7 +494,27 @@
       },
 
       updateEvent() {
-        alert('UPDATE')
+        let updateParams = {
+          userId: this.selectedUserId,
+          desc: this.description,
+          startHour: this.eventTime.startHour,
+          startMinutes: this.eventTime.startMinutes,
+          endHour: this.eventTime.endHour,
+          endMinutes: this.eventTime.endMinutes,
+          reacurring: this.recurringApplyOccurrences,
+        }
+
+        if (this.timeInterval == 12) {
+          if (this.hoursCount.selectedStart == 'pm' && updateParams.startHour < 12) {
+            updateParams.startHour = updateParams.startHour + 12
+          }
+
+          if (this.hoursCount.selectedEnd == 'pm' && updateParams.endHour < 12) {
+            updateParams.endHour = updateParams.endHour + 12
+          }
+        }
+        
+        this.$emit('eventFormUpdate', updateParams)
       },
 
       createDateOptions() {

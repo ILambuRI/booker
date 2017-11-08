@@ -53,8 +53,13 @@
     <p>[30]: The id was not found in the rooms table | booker/Events::getEventsByParams</p>
     
     <p>[31]: The id was not found in the events table | user/Events::getEventsByParams</p>
+
     <p>[32]: The id was not found in the events table | user/Events::deleteEvents</p>
-    <p>[33]: The event_id was not found in the events table | user/Events::getEventsByParams</p>
+    <p>[33]: The event_id was not found in the events table | user/Events::deleteEvents</p>
+    <p>[34]: Only the owner or administrator of the event | user/Events::deleteEvents</p>
+    <p>[35]: Only future events can be changed | user/Events::deleteEvents</p>
+    <p>[36]: No parent events found | user/Events::deleteEvents</p>
+    <p>[37]: Recurring must be TRUE or FALSE in /hash(user)/id(event)/false(true) | user/Events::deleteEvents</p>
 
 
 

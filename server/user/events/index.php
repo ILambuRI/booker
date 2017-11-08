@@ -188,95 +188,320 @@ class Events
 
     /**
      * Event Update(s)
-     * name | password - input.
+     * hash | userId | eventId | startHour | startMinutes | endHour | endMinutes | desc | reacurring - input.
      * @return array
      */
     public function putEvents($params)
     {
-        if ( !Validate::checkName($params['name']) )
-            return $this->error(406, 11);
+        $userId = $this->getUserIdByHash($params['hash']);
 
-        if ( !Validate::checkPassword($params['password']) )
-            return $this->error(406, 12);
-        
-        $params['password'] = Convert::toMd5($params['password']);
-        
-        if ( !DbCheck::name($this->db, $params['name']) )
-            return $this->error(406, 13);
-        
-        if ( !DbCheck::password($this->db, $params['name'], $params['password']) )
-            return $this->error(406, 14);
-            
-        $arrParams['name'] = $params['name'];
+        if ( !DbCheck::eventId($this->db, $params['eventId']) )
+            return $this->error(404, 32);
 
-        do
+        if ( !DbCheck::eventOwnById($this->db, $userId, $params['eventId']) )
         {
-            $arrParams['hash'] = Convert::toMd5( $params['name'] . rand(12345, PHP_INT_MAX) );
+            if ( !DbCheck::adminRights($this->db, $params['hash']) )
+                return $this->error(406, 34);
         }
-        while ( DbCheck::hash($this->db, $arrParams['hash']) );
-        
-        $sql = 'UPDATE booker_users
-                SET hash = :hash
-                WHERE name = :name';
-        $result = $this->db->execute($sql, $arrParams);
 
-        if (!$result)
-            return $this->error();
+        if ( !DbCheck::userId($this->db, $params['userId']) )
+            return $this->error(406, 18);
+
+        if( !$params['desc'] = Validate::clearText($params['desc']) )
+            return $this->error(406, 20);
+
+        
+        if ( !$eventInfo = $this->getFutureEventInfoById($params['eventId']) )
+            return $this->error(404, 35);
+
+        if ($params['reacurring'] == 'false')
+        {
+            $newStartHour = new DateTime();
+            $newStartHour->setTimestamp($eventInfo[0]['start']);
+            $newStartHour->setTime( (int)$params['startHour'], (int)$params['startMinutes'] );
+            $newStartHour = $newStartHour->getTimestamp();
+
+            $newEndHour = new DateTime();
+            $newEndHour->setTimestamp($eventInfo[0]['end']);
+            $newEndHour->setTime( (int)$params['endHour'], (int)$params['endMinutes'] );
+            $newEndHour = $newEndHour->getTimestamp();
+
+            $timeNow = time();
             
-        return $this->getUserInfo($arrParams['hash']);
+            if ( $newStartHour <= $timeNow )
+                return $this->error(406, 22);
+            
+            if ( !(1800 + $newStartHour <= $newEndHour) )
+                return $this->error(406, 21);
+
+            if ( !DbCheck::eventAvailableForUpdate($this->db, $params['eventId'], $newStartHour, $newEndHour) )
+                return $this->error(404, 3242452);
+            
+            $arrParams['start'] = $newStartHour;
+            $arrParams['end'] = $newEndHour;
+            $arrParams['desc'] = $params['desc'];
+            $arrParams['id'] = $params['eventId'];
+            $arrParams['user_id'] = $params['userId'];
+
+            $sql = 'UPDATE booker_events
+                    SET start = :start,
+                        end = :end,
+                        `desc` = :desc,
+                        user_id = :user_id
+                    WHERE id = :id';
+            $result = $this->db->execute($sql, $arrParams);
+
+            if (!$result)
+                return $this->error();
+                
+            $eventInfo[0]['start'] = $newStartHour;
+            $eventInfo[0]['end'] = $newEndHour;
+            $eventInfo[0]['desc'] = $params['desc'];
+            $eventInfo[0]['user_id'] = $params['userId'];
+            
+            return $eventInfo;
+        }
+
+        if ($params['reacurring'] == 'true')
+        {
+            
+            if ( !$allEventsInfo = $this->getEventInfoByParentId($eventInfo[0]['start'], $eventInfo[0]['event_id']) )
+                return $this->error(404, 36);
+                
+            $eventsArr = [];
+            foreach ($allEventsInfo as $value)
+            {
+                $newStartHour = new DateTime();
+                $newStartHour->setTimestamp($value['start']);
+                $newStartHour->setTime( (int)$params['startHour'], (int)$params['startMinutes'] );
+                $newStartHour = $newStartHour->getTimestamp();
+    
+                $newEndHour = new DateTime();
+                $newEndHour->setTimestamp($value['end']);
+                $newEndHour->setTime( (int)$params['endHour'], (int)$params['endMinutes'] );
+                $newEndHour = $newEndHour->getTimestamp();
+    
+                $timeNow = time();
+                
+                if ( $newStartHour <= $timeNow )
+                    return $this->error(406, 22);
+                
+                if ( !(1800 + $newStartHour <= $newEndHour) )
+                    return $this->error(406, 21);
+
+                if ( !DbCheck::eventAvailableForUpdate($this->db, $value['id'], $newStartHour, $newEndHour) )
+                    return $this->error(404, 3242);
+
+                $arrParams['start'] = $newStartHour;
+                $arrParams['end'] = $newEndHour;
+                $arrParams['desc'] = $params['desc'];
+                $arrParams['id'] = $value['id'];
+                $arrParams['user_id'] = $params['userId'];
+
+                $sql = 'UPDATE booker_events
+                        SET start = :start,
+                            end = :end,
+                            `desc` = :desc,
+                            user_id = :user_id
+                        WHERE id = :id';
+                $result = $this->db->execute($sql, $arrParams);
+    
+                if (!$result)
+                    return $this->error();
+                    
+                $value['start'] = $newStartHour;
+                $value['end'] = $newEndHour;
+                $value['desc'] = $params['desc'];
+                $value['user_id'] = $params['userId'];
+                $eventsArr[] = $value;
+            }
+
+            return $eventsArr;
+        }        
+
+        return $this->error(406, 37);
     }
 
     /**
      * Delete event(s)
-     * /id(event)/false - 1 event
-     * /event_id/true - recurring
+     * /hash(user)/id(event)/false - 1 event
+     * /hash(user)/id(event)/true - reacurring
      * @return bool
      */
     public function deleteEvents($params)
     {
-        list( $id, $recurring ) = explode('/', $params['params'], 3);
+        list( $hash, $eventId, $reacurring ) = explode('/', $params['params'], 3);
+        
+        $userId = $this->getUserIdByHash($hash);
 
-        $timestampNow = time();
+        if ( !DbCheck::eventId($this->db, $eventId) )
+            return $this->error(404, 32);
+            
+        if ( !DbCheck::eventOwnById($this->db, $userId, $eventId) )
+        {
+            if ( !DbCheck::adminRights($this->db, $hash) )
+                return $this->error(406, 34);
+        }
+
+        if ( !$eventInfo = $this->getFutureEventInfoById($eventId) )
+            return $this->error(404, 35);
+        
+        $timeLabel = $eventInfo[0]['start'];
 
         /* One event */
-        if ($recurring == 'false')
+        if ($reacurring == 'false')
         {
-            if ( !DbCheck::eventId($this->db, $id) )
-                return $this->error(406, 32);
-
             $sql = "DELETE FROM booker_events
                     WHERE id = :id
-                    AND start > $timestampNow
-                    AND end > $timestampNow
+                    AND start >= $timeLabel
+                    AND end >= $timeLabel
                     LIMIT 1";
 
-            $result = $this->db->execute($sql, ['id' => $id]);        
-        }
+            $result = $this->db->execute($sql, ['id' => $eventId]);
 
+            if (!$result)
+                return $this->error();
+
+            return $eventInfo;
+        }
+        
         /* All events */
-        if ($recurring == 'true')
+        if ($reacurring == 'true')
         {
-            if ( !DbCheck::eventIdParent($this->db, $id) )
-                return $this->error(406, 33);
+            $event_id = $eventInfo[0]['event_id'];
+
+            if ( !DbCheck::eventIdParent($this->db, $eventId, $event_id) )
+                return $this->error(404, 33);
+
+            if ( !$allEventsInfo = $this->getEventInfoByParentId($timeLabel, $event_id) )
+                return $this->error(404, 36);
+
+            $cntLimit = count($allEventsInfo);
 
             $sql = "DELETE FROM booker_events
-                    WHERE event_id = :id
-                    AND start > $timestampNow
-                    AND end > $timestampNow";
+                    WHERE event_id = :event_id
+                    AND start >= $timeLabel
+                    AND end >= $timeLabel
+                    LIMIT $cntLimit";
 
-            $result = $this->db->execute($sql, ['id' => $id]);        
+            $result = $this->db->execute($sql, ['event_id' => $event_id]);
+
+            if (!$result)
+                return $this->error();
+
+            return $allEventsInfo;
         }
+        
+        return $this->error(406, 37);
+    }
+
+    // /**
+    //  * Delete event(s)
+    //  * /hash(user)/id(event)/false - 1 event
+    //  * /hash(user)/event_id/true - reacurring
+    //  * @return bool
+    //  */
+    // public function deleteEvents($params)
+    // {
+    //     list( $id, $reacurring ) = explode('/', $params['params'], 3);
+
+    //     // $timestampNow = time();
+
+
+    //     /* One event */
+    //     if ($reacurring == 'false')
+    //     {
+    //         if ( !DbCheck::eventId($this->db, $id) )
+    //             return $this->error(406, 32);
+
+    //         $sql = "DELETE FROM booker_events
+    //                 WHERE id = :id
+    //                 AND start > $timestampNow
+    //                 AND end > $timestampNow
+    //                 LIMIT 1";
+
+    //         $result = $this->db->execute($sql, ['id' => $id]);        
+    //     }
+
+    //     /* All events */
+    //     if ($reacurring == 'true')
+    //     {
+    //         if ( !DbCheck::eventIdParent($this->db, $id) )
+    //             return $this->error(406, 33);
+
+    //         $sql = "DELETE FROM booker_events
+    //                 WHERE event_id = :id
+    //                 AND start > $timestampNow
+    //                 AND end > $timestampNow";
+
+    //         $result = $this->db->execute($sql, ['id' => $id]);        
+    //     }
 
         
-        if (!$result)
-            return $this->error();
+    //     if (!$result)
+    //         return $this->error();
 
-        return TRUE;
-    }
+    //     return TRUE;
+    // }
     
     private function getTimeWeek($cnt = 1)
     {
         return 60 * 60 * 24 * 7 * $cnt;
+    }
+    
+    private function getUserIdByHash($hash)
+    {
+        $sql = 'SELECT id FROM booker_users WHERE hash = :hash';
+        $result = $this->db->execute($sql, ['hash' => $hash]);
+        
+        if (!$result)
+            return FALSE;
+        
+        return $result[0]['id'];
+    }
+    
+    private function getFutureEventInfoById($id)
+    {
+        $timestampNow = time();
+        
+        $sql = "SELECT booker_events.start,
+                       booker_events.event_id,
+                       booker_events.end,
+                       booker_events.created,
+                       booker_events.`desc`
+                FROM booker_events
+                WHERE booker_events.id = :id
+                AND start > $timestampNow
+                AND end > $timestampNow
+                LIMIT 1";
+                
+        $result = $this->db->execute($sql, ['id' => $id]);
+        
+        if (!$result)
+            return FALSE;
+        
+        return $result;
+    }
+    
+    private function getEventInfoByParentId($timeLabel, $event_id)
+    {
+        $sql = "SELECT booker_events.start,
+                       booker_events.event_id,
+                       booker_events.id,
+                       booker_events.end,
+                       booker_events.created,
+                       booker_events.`desc`
+                FROM booker_events
+                WHERE booker_events.event_id = :event_id
+                AND start >= $timeLabel
+                AND end >= $timeLabel";
+                
+        $result = $this->db->execute($sql, ['event_id' => $event_id]);
+        
+        if (!$result)
+            return FALSE;
+        
+        return $result;
     }
 }
 

@@ -31,7 +31,7 @@ class Rooms
 
         if (!$result)
             return $this->error();
-
+        
         return $result;
     }
     

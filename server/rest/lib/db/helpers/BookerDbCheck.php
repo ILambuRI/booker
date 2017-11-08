@@ -21,7 +21,7 @@ class BookerDbCheck
     }
     
     /** 
-     * Check id in the table users.
+     * Check user id in the table users.
      * @return bool
      */
     static function userId($pdo, $id)
@@ -51,7 +51,7 @@ class BookerDbCheck
     }
     
     /** 
-     * Check id in the table rooms.
+     * Check event id in the table events.
      * @return bool
      */
     static function eventId($pdo, $id)
@@ -66,13 +66,33 @@ class BookerDbCheck
     }
     
     /** 
-     * Check id in the table rooms.
+     * Check event_id in the table events.
      * @return bool
      */
-    static function eventIdParent($pdo, $id)
+    static function eventIdParent($pdo, $id, $event_id)
     {
-        $sql = 'SELECT event_id FROM booker_events WHERE event_id = :id';
-        $result = $pdo->execute($sql, ['id' => $id]);
+        $sql = 'SELECT id FROM booker_events
+                WHERE id = :id
+                AND event_id = :event_id';
+        $result = $pdo->execute($sql, ['id' => $id, 'event_id' => $event_id]);
+        
+        if (!$result)
+            return FALSE;
+
+        return TRUE;
+    }
+    
+    /** 
+     * Check event own by id in the table events.
+     * @return bool
+     */
+    static function eventOwnById($pdo, $userId, $eventId)
+    {
+        $sql = 'SELECT booker_events.id
+                FROM booker_events
+                WHERE booker_events.user_id = :userId
+                AND booker_events.id = :eventId';
+        $result = $pdo->execute($sql, ['userId' => $userId, 'eventId' => $eventId]);
         
         if (!$result)
             return FALSE;
@@ -160,6 +180,24 @@ class BookerDbCheck
 
         return FALSE;
     }
+	
+    /** 
+     * Check user password in the table.
+     * @return bool
+     */
+    static function eventAvailableForUpdate($pdo, $id, $timeStart, $timeEnd)
+    {
+        $sql = "SELECT booker_events.id
+                FROM booker_events
+                WHERE ( (booker_events.start <= $timeStart AND $timeStart <= booker_events.end)
+                OR (booker_events.start <= $timeEnd AND $timeEnd <= booker_events.end)
+                OR ($timeStart <= booker_events.start AND booker_events.end <= $timeEnd) )
+                AND booker_events.id <> $id";
+        $result = $pdo->execute($sql);
+        
+        if (!$result)
+            return TRUE;
 
-
+        return FALSE;
+    }
 }

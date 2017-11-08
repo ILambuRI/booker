@@ -149,7 +149,7 @@ class Handler
 	 *  @return array
 	 */
 	private function converting($data)
-	{
+	{   
 		switch ($this->contentType)
 		{
 			case '.json':
