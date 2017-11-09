@@ -33,7 +33,7 @@ export default new Router({
     },
 
     {
-      path: '/event/detail/:id/:timeInterval',
+      path: '/event/detail/:id/:timeInterval/:selectedRoomId',
       name: 'EventDetail page',
       component: EventDetail
     },

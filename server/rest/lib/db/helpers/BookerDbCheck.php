@@ -21,6 +21,22 @@ class BookerDbCheck
     }
     
     /** 
+     * Checking user admin access by id.
+     * @return bool
+     */
+    static function adminById($pdo, $id)
+    {
+        $sql = 'SELECT admin FROM booker_users WHERE id = :id';
+        $result = $pdo->execute($sql, ['id' => $id]);
+        
+        if ($result && $result[0]['admin'] == 0)
+            return FALSE;
+
+        if ($result && $result[0]['admin'] == 1)
+            return TRUE;
+    }
+    
+    /** 
      * Check user id in the table users.
      * @return bool
      */
@@ -163,7 +179,7 @@ class BookerDbCheck
     }
 	
     /** 
-     * Check user password in the table.
+     * Check for the availability of the event time.
      * @return bool
      */
     static function eventAvailable($pdo, $roomId, $timeStart, $timeEnd)
@@ -182,7 +198,7 @@ class BookerDbCheck
     }
 	
     /** 
-     * Check user password in the table.
+     * Check for the availability of the event time for the update.
      * @return bool
      */
     static function eventAvailableForUpdate($pdo, $roomId, $eventId, $timeStart, $timeEnd)

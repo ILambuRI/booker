@@ -7,28 +7,82 @@
     <title>Documentation</title>
 </head>
 <body>
+    <h3>Admin:</h3>
+    <p><strong>users:</strong></p>
+    <p>
+        [GET] booker/client/api/admin/users/hash(admin)/id(user) <br>
+        Getting full information about the user(s). <br>
+        /hash(admin) - get all users. <br>
+        /hash(admin)/id(user) - get the user by ID.
+    </p>
+    <p>
+        [POST] booker/client/api/admin/users/ <br>
+        Registration - write a new user in table. <br>
+        hash(admin) | name | password | email - input.
+    </p>
+    <p>
+        [PUT] booker/client/api/admin/users/ <br>
+        Update - update user data in table. <br>
+        hash(admin) | id(user) | name | password | email - input.
+    </p>
+    <p>
+        [DELETE] booker/client/api/admin/users/hash(admin)/id(user) <br>
+        Delete - removing user (not the administrator) from table. <br>
+        /hash(admin)/id(user) - input
+    </p>
+
     <h3>User:</h3>
     <p><strong>users:</strong></p>
     <p>
-        [GET] booker/client/api/user/users/name(null or false)/email <br>
-        Checking the name and email in the database.
-        /name (user)
-        /null(or false)/email
-    </p>
-    <p>
-        [POST] booker/client/api/user/users/ <br>
-        Registration - write a new user in table.
-        name | password | email - input.
-    </p>
-    <p>
         [PUT] booker/client/api/user/users/ <br>
-        Login - user authorization, if it is in the table.
-        name | password - input.
-        Return user info.
+        Login - user authorization, if it is in the table, we write a new hash. <br>
+        name | password - input. <br>
+        Return user info array whith new hash.
     </p>
     <p>
         [DELETE] booker/client/api/user/users/hash <br>
-        Logout - removing (updating) a hash in tables.
+        Logout - removing (updating) a hash in tables. <br>
+        /hash - input
     </p>
-    </body>
+
+    <p><strong>events:</strong></p>
+    <p>
+        [GET] booker/client/api/user/events/id(event) <br>
+        Receiving event information by id. <br>
+        /id - input.
+    </p>
+    <p>
+        [POST] booker/client/api/user/events/ <br>
+        Add new event. <br>
+        Inputs: <br>
+        userId | roomId | desc | timeCreate(timestamp) | timeStart(timestamp) | timeEnd(timestamp) | type(Weekly | Bi-weekly | Monthly) | duration(Weekly 1-4 | Bi-weekly 1-2). <br>
+        Return array whith info.
+    </p>
+    <p>
+        [PUT] booker/client/api/user/events/ <br>
+        Event Update(s) <br>
+        hash(user) | userId | roomId | eventId | startHour(8-20) | startMinutes(00 | 30) | endHour(8-20) | endMinutes(00 | 30) | desc | reacurring(TRUE | FALSE) <br>
+        Return array whith info.
+    </p>
+    <p>
+        [DELETE] booker/client/api/user/events/hash(user)/id(event)/false(true) <br>
+        Delete event(s) <br>
+        /hash(user)/id(event)/false - 1 event <br>
+        /hash(user)/id(event)/true - reacurring
+    </p>
+
+    <h3>Booker:</h3>
+    <p><strong>events:</strong></p>
+    <p>
+        [GET] booker/client/api/booker/events/id(room)/month/year <br>
+        Receive all events for the room by year and month. <br>
+        id(room)/month/year - input.
+    </p>
+
+    <p><strong>rooms:</strong></p>
+    <p>
+        [GET] booker/client/api/booker/rooms/ <br>
+        Get the whole table of rooms.
+    </p>
+</body>
 </html>

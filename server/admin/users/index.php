@@ -20,6 +20,7 @@ class AdminUsers
     }
     
     /**
+     * Get user(s) info.
      * /hash(admin) - get all users.
      * /hash(admin)/id(user) - get the user by ID.
      * @return array
@@ -103,7 +104,7 @@ class AdminUsers
     }
 
     /**
-     * Registration - write a new user in table.
+     * Update - update user in table.
      * hash(admin) | id | name | password | email - input.
      * @return bool
      */
@@ -144,7 +145,7 @@ class AdminUsers
 
     
     /**
-     * Delete - removing user in table.
+     * Delete - removing user from table.
      * /hash(admin)/id - input
      * @return bool
      */
@@ -159,6 +160,9 @@ class AdminUsers
 
         if ( !DbCheck::userId($this->db, $arrParams['id']) )
             return $this->error(406, 29);
+
+        if ( DbCheck::adminById($this->db, $arrParams['id']) )
+            return $this->error(406, 46);
             
         $sql = 'DELETE FROM booker_users
                 WHERE id = ' . $arrParams['id'] . 

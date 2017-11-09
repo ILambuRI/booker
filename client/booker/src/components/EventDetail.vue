@@ -4,6 +4,7 @@
               @eventFormUpdate="updateEvent"
               @eventFormDelete="deleteEvent"
               :eventDetail="eventDetail"
+              :eventUpdated="eventUpdated"
               :eventDeleted="eventDeleted">
   </event-form>
 </template>
@@ -17,6 +18,7 @@ export default {
     return {
       URL: URL,
       eventDeleted: [],
+      eventUpdated: [],
       eventDetail: {
         id: '',
         user_id: '',
@@ -47,105 +49,82 @@ export default {
   },
 
   methods: {
-    parseDateDeleted() {
+    parseDate(eventData) {
       let date = null
-      for (let i=0, len=this.eventDeleted.length; i<len; i++) {
-        date = new Date(this.eventDeleted[i].start * 1000)
+      for (let i=0, len=eventData.length; i<len; i++) {
+        date = new Date(eventData[i].start * 1000)
         if (this.timeInterval == 12) {
-          this.eventDeleted[i].start = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+          eventData[i].start = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
         }
         else {
-          this.eventDeleted[i].start = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
+          eventData[i].start = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
         }
 
-        date = new Date(this.eventDeleted[i].end * 1000)
+        date = new Date(eventData[i].end * 1000)
         if (this.timeInterval == 12) {
-          this.eventDeleted[i].end = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
+          eventData[i].end = date.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
         }
         else {
-          this.eventDeleted[i].end = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
+          eventData[i].end = date.toLocaleString('ru-RU', { hour: 'numeric', minute: 'numeric', hour24: true })
         }
+        
+        eventData[i].created = date.toLocaleDateString()
 
-        this.eventDeleted[i].created = date.toLocaleDateString()
+        if (eventData[i].success == true) {
+          eventData[i].success = 'Updated'
+        }
+        else {
+          eventData[i].success = 'Not updated'
+        }
       }
+
+      return eventData
     },
 
     updateEvent(updateParams) {
-      // console.log(updateParams)
-      // // console.log(this.user.hash)
-      // console.log(this.$route.params.id)
-      // console.log(Object.assign({}, updateParams, {hash: this.user.hash, eventId: this.$route.params.id}))
+      // var xhr = new XMLHttpRequest();
+      // xhr.open('PUT', this.URL + 'user/events/', false);
+      // xhr.send('hash=' + this.user.hash + '&roomId=' + this.$route.params.selectedRoomId + '&userId=' + updateParams.userId + '&eventId=' + this.$route.params.id + '&startHour=' + updateParams.startHour + '&startMinutes=' + updateParams.startMinutes + '&endHour=' + updateParams.endHour + '&endMinutes=' + updateParams.endMinutes + '&desc=' + updateParams.desc + '&reacurring=' + updateParams.reacurring);
+      // if (xhr.status != 200) {
+      //   alert( xhr.status + ': ' + xhr.statusText );
+      // } else {
+      //   console.log(JSON.parse(xhr.responseText).data)
+      //   this.eventUpdated = this.parseDate(JSON.parse(xhr.responseText).data)
+      //   console.log(this.eventUpdated)
+      // }
 
-      var xhr = new XMLHttpRequest();
-
-      xhr.open('PUT', this.URL + 'user/events/', false);
-      xhr.send('hash=' + this.user.hash + '&userId=' + updateParams.userId + '&eventId=' + this.$route.params.id + '&startHour=' + updateParams.startHour + '&startMinutes=' + updateParams.startMinutes + '&endHour=' + updateParams.endHour + '&endMinutes=' + updateParams.endMinutes + '&desc=' + updateParams.desc + '&reacurring=' + updateParams.reacurring);
-
-      // 4. Если код ответа сервера не 200, то это ошибка
-      if (xhr.status != 200) {
-        // обработать ошибку
-        alert( xhr.status + ': ' + xhr.statusText ); // пример вывода: 404: Not Found
-      } else {
-        // вывести результат
-        alert( xhr.responseText ); // responseText -- текст ответа.
-      }
-
-      // fetch(this.URL + 'user/events/', {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Accept': 'application/json'
-      //     // "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
-      //   },  
-      //   body: 'hash=' + this.user.hash + '&userId=' + updateParams.userId + '&eventId=' + this.$route.params.id + '&startHour=' + updateParams.startHour + '&startMinutes=' + updateParams.startMinutes + '&endHour=' + updateParams.endHour + '&endMinutes=' + updateParams.endMinutes + '&desc=' + updateParams.desc + '&reacurring=' + "'" + updateParams.reacurring + "'"
-      // })
-      // .then(this.status)
-      // .then(this.json)
-      // .then((data) => {
-      //   if (data.server.status == 200) {
-      //     // this.showModal = true
-      //     // this.$emit('userChanged')
-      //   }
-      //   else {
-      //     let error = 'Error in saveUser()'+
-      //                 '\nStatus: ' + data.server.status +
-      //                 '\nError code: ' + data.server.code +
-      //                 '\nInfo: ' + data.server.information
-      //     alert(error)
-      //   }
-      // })
-      
-
-      // fetch(this.URL + 'user/events/', {
-      //   method: 'PUT',
-      //   headers: {
-      //     "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
-      //   },
-      //   body: 'hash=' + this.user.hash
-              
-      //   body: 'hash=' + this.user.hash +
-      //         '&userId=' + updateParams.userId +
-      //         '&eventId=' + this.$route.params.id +
-      //         '&startHour=' + updateParams.startHour +
-      //         '&startMinutes=' + updateParams.startMinutes +
-      //         '&endHour=' + updateParams.endHour +
-      //         '&endMinutes=' + updateParams.endMinutes +
-      //         '&desc=' + updateParams.desc +
-      //         '&reacurring=' + updateParams.reacurring
-      // })
-      // .then(this.status)
-      // .then(this.json)
-      // .then((data) => {
-      //   if (data.server.status == 200) {
-      //     console.log(data.data)
-      //   }
-      //   else {
-      //     let error = 'Error in updateEvent()'+
-      //                 '\nStatus: ' + data.server.status +
-      //                 '\nError code: ' + data.server.code +
-      //                 '\nInfo: ' + data.server.information
-      //     alert(error)
-      //   }
-      // })
+      fetch(this.URL + 'user/events/', {
+        method: 'PUT',
+        headers: {
+          "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        body: 'hash=' + this.user.hash +
+              '&userId=' + updateParams.userId +
+              '&eventId=' + this.$route.params.id +
+              '&roomId=' + this.$route.params.selectedRoomId +
+              '&startHour=' + updateParams.startHour +
+              '&startMinutes=' + updateParams.startMinutes +
+              '&endHour=' + updateParams.endHour +
+              '&endMinutes=' + updateParams.endMinutes +
+              '&desc=' + updateParams.desc +
+              '&reacurring=' + updateParams.reacurring
+      })
+      .then(this.status)
+      .then(this.json)
+      .then((data) => {
+        if (data.server.status == 200) {
+          // this.eventUpdated = data.data
+          this.eventUpdated = this.parseDate(data.data)
+          // console.log(this.eventUpdated)
+        }
+        else {
+          let error = 'Error in updateEvent()'+
+                      '\nStatus: ' + data.server.status +
+                      '\nError code: ' + data.server.code +
+                      '\nInfo: ' + data.server.information
+          alert(error)
+        }
+      })
       
     },
 
@@ -155,8 +134,7 @@ export default {
       .then(this.json)
       .then((data) => {
         if (data.server.status == 200) {
-          this.eventDeleted = data.data
-          this.parseDateDeleted()
+          this.eventDeleted = this.parseDate(data.data)
           // console.log(this.eventDeleted)
         }
         else {

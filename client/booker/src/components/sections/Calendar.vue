@@ -24,7 +24,7 @@
             <th style="width: 14.29%;" v-for="(name, key) in engWeek" :key="key" scope="col"> {{ name }} </th>
           </tr>
         </thead>
-          <month :monthArr="monthArr" :timeFormat="timeFormat" :user="user"></month>
+          <month :monthArr="monthArr" :timeFormat="timeFormat" :user="user" @windowClosed="windowClosed" :selectedRoomId="selectedRoomId"></month>
       </table>
     </div>
   </div>
@@ -72,18 +72,14 @@ export default {
   },
 
   methods: {
+    windowClosed() {
+      this.getAllEvents()
+    },
+
     getMonthArr() {
       let timeNow = Math.floor( new Date().getTime()  / 1000 )
       let timeFirstDay = Math.floor( new Date(this.year, this.monthNum, 1).getTime()  / 1000 )
       let timeLastDay =  Math.floor( new Date(this.year, this.monthNum + 1, 0).getTime()  / 1000 )
-      
-      // this.getAllEvents(timeFirstDay, timeLastDay)
-
-      // let D = new Date(year, month, Dlast)
-      // let DNlast = new Date(D.getFullYear(), D.getMonth(), Dlast).getDay()+1
-      // let DNfirst = new Date(D.getFullYear(), D.getMonth(), 1).getDay()+1
-      // console.log( timeFirstDay )
-      // console.log( timeLastDay )
 
       /* Group events by day */
       let formatedEvents = {}

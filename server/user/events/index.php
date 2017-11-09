@@ -7,7 +7,7 @@ use lib\traits\Error;
 use lib\services\Validate;
 use lib\services\Convert;
 
-class Events
+class UserEvents
 {
     use Error;
     
@@ -57,7 +57,7 @@ class Events
     /**
      * Add new event.
      * Inputs:
-     * userId | roomId | desc | timeCreate | timeStart | timeEnd | type | duration.
+     * userId | roomId | desc | timeCreate(timestamp) | timeStart(timestamp) | timeEnd(timestamp) | type(Weekly | Bi-weekly | Monthly) | duration.
      * @return array
      */
     public function postEvents($params)
@@ -104,12 +104,12 @@ class Events
                         VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate)';
                 $result = $this->db->execute($sql, $params);
 
-                $operationResult[0]['success'] = true;
+                $operationResult[0]['success'] = TRUE;
                 return $operationResult;
             }
             else
             {
-                $operationResult[0]['success'] = false;
+                $operationResult[0]['success'] = FALSE;
                 return $operationResult;
             }
         }
@@ -144,7 +144,7 @@ class Events
 
             if ( DbCheck::eventAvailable($this->db, $params['roomId'], $params['timeStart'], $params['timeEnd']) )
             {
-                $operationResult[$i]['success'] = true;
+                $operationResult[$i]['success'] = TRUE;
 
                 if ( empty($arrParams) )
                 {
@@ -170,7 +170,7 @@ class Events
             }
             else
             {
-                $operationResult[$i]['success'] = false;            
+                $operationResult[$i]['success'] = FALSE;            
             }
 
             $params['timeStart'] = $params['timeStart'] + $increase;
@@ -187,8 +187,8 @@ class Events
     }
 
     /**
-     * Event Update(s)
-     * hash | userId | roomId | eventId | startHour | startMinutes | endHour | endMinutes | desc | reacurring - input.
+     * Event Update(s).
+     * hash | userId | roomId | eventId | startHour(8-20) | startMinutes(0 | 30) | endHour(8-20) | endMinutes(0 | 30) | desc | reacurring(true | false) - input.
      * @return array
      */
     public function putEvents($params)
@@ -196,24 +196,24 @@ class Events
         $userId = $this->getUserIdByHash($params['hash']);
 
         if ( !DbCheck::eventId($this->db, $params['eventId']) )
-            return $this->error(404, 32);
+            return $this->error(404, 38);
 
         if ( !DbCheck::eventOwnById($this->db, $userId, $params['eventId']) )
         {
             if ( !DbCheck::adminRights($this->db, $params['hash']) )
-                return $this->error(406, 34);
+                return $this->error(406, 39);
         }
 
         if ( !DbCheck::userId($this->db, $params['userId']) )
-            return $this->error(406, 18);
+            return $this->error(406, 40);
 
         if( !$params['desc'] = Validate::clearText($params['desc']) )
-            return $this->error(406, 20);
-
+            return $this->error(406, 41);
         
         if ( !$eventInfo = $this->getFutureEventInfoById($params['eventId']) )
-            return $this->error(404, 35);
+            return $this->error(404, 42);
 
+        /* One event */
         if ($params['reacurring'] == 'false')
         {
             $newStartHour = new DateTime();
@@ -229,39 +229,48 @@ class Events
             $timeNow = time();
             
             if ( $newStartHour <= $timeNow )
-                return $this->error(406, 22);
+                return $this->error(406, 43);
             
             if ( !(1800 + $newStartHour <= $newEndHour) )
-                return $this->error(406, 21);
-
-            if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $params['eventId'], $newStartHour, $newEndHour) )
-                return $this->error(404, 3242452);
-            
-            $arrParams['start'] = $newStartHour;
-            $arrParams['end'] = $newEndHour;
-            $arrParams['desc'] = $params['desc'];
-            $arrParams['id'] = $params['eventId'];
-            $arrParams['user_id'] = $params['userId'];
-
-            $sql = 'UPDATE booker_events
-                    SET start = :start,
-                        end = :end,
-                        `desc` = :desc,
-                        user_id = :user_id
-                    WHERE id = :id';
-            $result = $this->db->execute($sql, $arrParams);
-
-            if (!$result)
-                return $this->error();
-                
+                return $this->error(406, 44);
+                            
             $eventInfo[0]['start'] = $newStartHour;
             $eventInfo[0]['end'] = $newEndHour;
             $eventInfo[0]['desc'] = $params['desc'];
             $eventInfo[0]['user_id'] = $params['userId'];
+            $eventInfo[0]['success'] = FALSE;
+
+            if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $params['eventId'], $newStartHour, $newEndHour) )
+            {
+                $eventInfo[0]['success'] = FALSE;
+            }
+            else
+            {
+                $arrParams['start'] = $newStartHour;
+                $arrParams['end'] = $newEndHour;
+                $arrParams['desc'] = $params['desc'];
+                $arrParams['id'] = $params['eventId'];
+                $arrParams['user_id'] = $params['userId'];
+    
+                $sql = 'UPDATE booker_events
+                        SET start = :start,
+                            end = :end,
+                            `desc` = :desc,
+                            user_id = :user_id
+                        WHERE id = :id';
+                $result = $this->db->execute($sql, $arrParams);
+    
+                if (!$result)
+                    $eventInfo[0]['success'] = FALSE;
+                    // return $this->error();
+
+                $eventInfo[0]['success'] = TRUE;
+            }
             
             return $eventInfo;
         }
 
+        /* All events */
         if ($params['reacurring'] == 'true')
         {
             
@@ -289,44 +298,53 @@ class Events
                 if ( !(1800 + $newStartHour <= $newEndHour) )
                     return $this->error(406, 21);
 
-                if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $value['id'], $newStartHour, $newEndHour) )
-                    return $this->error(404, 3242);
-
-                $arrParams['start'] = $newStartHour;
-                $arrParams['end'] = $newEndHour;
-                $arrParams['desc'] = $params['desc'];
-                $arrParams['id'] = $value['id'];
-                $arrParams['user_id'] = $params['userId'];
-
-                $sql = 'UPDATE booker_events
-                        SET start = :start,
-                            end = :end,
-                            `desc` = :desc,
-                            user_id = :user_id
-                        WHERE id = :id';
-                $result = $this->db->execute($sql, $arrParams);
-    
-                if (!$result)
-                    return $this->error();
-                    
                 $value['start'] = $newStartHour;
                 $value['end'] = $newEndHour;
                 $value['desc'] = $params['desc'];
                 $value['user_id'] = $params['userId'];
+                $value['success'] = FALSE;
+
+                if ( !DbCheck::eventAvailableForUpdate($this->db, $params['roomId'], $value['id'], $newStartHour, $newEndHour) )
+                {
+                    $value['success'] = FALSE;
+                }
+                else
+                {
+                    $arrParams['start'] = $newStartHour;
+                    $arrParams['end'] = $newEndHour;
+                    $arrParams['desc'] = $params['desc'];
+                    $arrParams['id'] = $value['id'];
+                    $arrParams['user_id'] = $params['userId'];
+    
+                    $sql = 'UPDATE booker_events
+                            SET start = :start,
+                                end = :end,
+                                `desc` = :desc,
+                                user_id = :user_id
+                            WHERE id = :id';
+                    $result = $this->db->execute($sql, $arrParams);
+        
+                    if (!$result)
+                        $value['success'] = FALSE;
+                        // return $this->error();
+                    
+                    $value['success'] = TRUE;
+                }
+                    
                 $eventsArr[] = $value;
             }
 
             return $eventsArr;
-        }        
+        }
 
-        return $this->error(406, 37);
+        return $this->error(406, 45);
     }
 
     /**
-     * Delete event(s)
-     * /hash(user)/id(event)/false - 1 event
-     * /hash(user)/id(event)/true - reacurring
-     * @return bool
+     * Delete event(s).
+     * /hash(user)/id(event)/false - 1 event.
+     * /hash(user)/id(event)/true - reacurring.
+     * @return array
      */
     public function deleteEvents($params)
     {
@@ -394,61 +412,25 @@ class Events
         
         return $this->error(406, 37);
     }
-
-    // /**
-    //  * Delete event(s)
-    //  * /hash(user)/id(event)/false - 1 event
-    //  * /hash(user)/event_id/true - reacurring
-    //  * @return bool
-    //  */
-    // public function deleteEvents($params)
-    // {
-    //     list( $id, $reacurring ) = explode('/', $params['params'], 3);
-
-    //     // $timestampNow = time();
-
-
-    //     /* One event */
-    //     if ($reacurring == 'false')
-    //     {
-    //         if ( !DbCheck::eventId($this->db, $id) )
-    //             return $this->error(406, 32);
-
-    //         $sql = "DELETE FROM booker_events
-    //                 WHERE id = :id
-    //                 AND start > $timestampNow
-    //                 AND end > $timestampNow
-    //                 LIMIT 1";
-
-    //         $result = $this->db->execute($sql, ['id' => $id]);        
-    //     }
-
-    //     /* All events */
-    //     if ($reacurring == 'true')
-    //     {
-    //         if ( !DbCheck::eventIdParent($this->db, $id) )
-    //             return $this->error(406, 33);
-
-    //         $sql = "DELETE FROM booker_events
-    //                 WHERE event_id = :id
-    //                 AND start > $timestampNow
-    //                 AND end > $timestampNow";
-
-    //         $result = $this->db->execute($sql, ['id' => $id]);        
-    //     }
-
-        
-    //     if (!$result)
-    //         return $this->error();
-
-    //     return TRUE;
-    // }
     
+    /**
+     * Get seconds on week(s).
+     *
+     * @param integer $cnt
+     * @return integer
+     */
     private function getTimeWeek($cnt = 1)
     {
         return 60 * 60 * 24 * 7 * $cnt;
     }
     
+    /**
+     * Get user ID by hash from table.
+     *
+     * @param string $hash
+     * @return bool
+     * @return integer
+     */
     private function getUserIdByHash($hash)
     {
         $sql = 'SELECT id FROM booker_users WHERE hash = :hash';
@@ -460,6 +442,13 @@ class Events
         return $result[0]['id'];
     }
     
+    /**
+     * Get array of event by ID.
+     *
+     * @param integer $id
+     * @return bool
+     * @return array
+     */
     private function getFutureEventInfoById($id)
     {
         $timestampNow = time();
@@ -483,6 +472,14 @@ class Events
         return $result;
     }
     
+    /**
+     * Get array of events by event_id.
+     *
+     * @param integer $timeLabel
+     * @param integer $event_id
+     * @return bool
+     * @return array
+     */
     private function getEventInfoByParentId($timeLabel, $event_id)
     {
         $sql = "SELECT booker_events.start,
@@ -509,7 +506,7 @@ if (PHP_SAPI !== 'cli')
 {
     try
     {
-        $api = new Rest( new Events );
+        $api = new Rest( new UserEvents );
         $api->table = 'events';
         $api->play();
     }

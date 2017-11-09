@@ -34,32 +34,6 @@ class Rooms
         
         return $result;
     }
-    
-    /**
-     * Get full information about the room by id.
-     * /id - input.
-     * @return array
-     */
-    public function getRoomsByParams($params)
-    {
-        $id = $params['params'];
-
-        if (!(int)$id || $id == '0')
-            return $this->error();
-        
-        $sql = 'SELECT booker_rooms.id,
-                       booker_rooms.name
-                FROM booker_rooms
-                WHERE booker_rooms.id = :id
-                LIMIT 1';
-
-        $result = $this->db->execute($sql, ['id' => $id]);
-
-        if (!$result)
-            return $this->error();
-
-        return $result;
-    }
 }
 
 if (PHP_SAPI !== 'cli')

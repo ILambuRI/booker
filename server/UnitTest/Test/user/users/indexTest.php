@@ -13,72 +13,36 @@ class UsersTest extends PHPUnit_Framework_TestCase
 
 	public function tearDown()
 	{
-		$this->db->exec('DELETE FROM bookshop_users
-						 WHERE `login` = "Abracadabra"');
-
+		// $this->db->exec('DELETE FROM booker_users
+		// 				 WHERE `name` = "Abracadabra"');
+		// $this->db->exec('DELETE FROM booker_users
+		// 				 WHERE `name` = "Abra Cadabra"');
+						 
 		$this->model = NULL;
 		$this->db = NULL;
-
-	}
-
-	public function testGetUsersByParamsTrue()
-	{
-		$result = $this->model->getUsersByParams( ['params' => 'lambur'] );
-		$this->assertNotInternalType('array', $result);
-		$this->assertInternalType('bool', $result);
-		$this->assertTrue(count($result) > 0);
-
-		/* TRUE if timeout (code = 013) */
-		$result = $this->model->getUsersByParams( ['params' => 'false/ADMIN_HASH'] );
-		$this->assertArrayHasKey('status', $result);
-		$this->assertArrayHasKey('code', $result);
-		$this->assertCount(2, $result);
-		$this->assertTrue(count($result) > 0);
-	}
-
-	public function testGetUsersByParamsError()
-	{
-		$result = $this->model->getUsersByParams( ['params' => 'aaa'] );
-		$this->assertArrayHasKey('status', $result);
-		$this->assertArrayNotHasKey('id', $result);
-		$this->assertCount(2, $result);
-		$this->assertFalse(count($result) == 0);
-
-		$result = $this->model->getUsersByParams( ['params' => 'false1/' . ADMIN_HASH] );
-		$this->assertArrayHasKey('status', $result);
-		$this->assertArrayNotHasKey('id', $result);
-		$this->assertCount(2, $result);
-		$this->assertFalse(count($result) == 0);
-	}
-
-	public function testPostUsersTrue()
-	{
-		$result = $this->model->postUsers( ['login' => 'Abracadabra', 'password' => '12345', 'phone' => '0987654321'] );
-		$this->assertArrayHasKey('hash', $result[0]);
-		$this->assertInternalType('array', $result);		
-		$this->assertTrue(count($result) > 0);
-	}
-
-	public function testPostUsersError()
-	{
-		$result = $this->model->postUsers( ['login' => 'Lambur', 'password' => '12345', 'phone' => '0987654321'] );
-		$this->assertArrayHasKey('status', $result);
-		$this->assertArrayNotHasKey('id', $result);
-		$this->assertCount(2, $result);
-		$this->assertFalse(count($result) == 0);
 	}
 
 	public function testPutUsersTrue()
 	{
-		$result = $this->model->putUsers( ['login' => 'lama', 'password' => '12345'] );
-		$this->assertArrayHasKey('hash', $result);
-		$this->assertArrayNotHasKey('id', $result);		
-		$this->assertTrue(count($result) > 0);
+		// $this->db->exec( "INSERT INTO booker_users (name, email, password, hash)
+  		// 				 VALUES ('Abracadabra', 'mail@mail.mail', '12345', 'BUM')" );
+		// $id = $this->db->lastId();
+
+		$result = $this->model->putUsers( [
+			'name' => 'Test User',
+			'password' => '11111'
+		] );
+		$this->assertInternalType('array', $result);
+		$this->assertNotInternalType('bool', $result);
+		$this->assertTrue( count($result) > 0 );
 	}
 
 	public function testPutUsersError()
 	{
-		$result = $this->model->putUsers( ['login' => 'Lambur2', 'password' => '12345'] );
+		$result = $this->model->putUsers( [
+			'name' => 'Test 1 User',
+			'password' => '11111'
+		] );
 		$this->assertArrayHasKey('status', $result);
 		$this->assertArrayNotHasKey('id', $result);
 		$this->assertCount(2, $result);
@@ -87,8 +51,11 @@ class UsersTest extends PHPUnit_Framework_TestCase
 
 	public function testDeleteUsersTrue()
 	{
-		$result = $this->model->postUsers( ['login' => 'Abracadabra', 'password' => '12345', 'phone' => '0987654321'] );
-		$result = $this->model->deleteUsers( ['params' => $result[0]['hash']] );
+		$this->db->exec("UPDATE booker_users
+						 SET hash = 'testhash'
+						 WHERE name = 'Test User'");
+
+		$result = $this->model->deleteUsers( ['params' => 'testhash'] );
 		$this->assertNotInternalType('array', $result);
 		$this->assertInternalType('bool', $result);
 		$this->assertTrue($result);
@@ -96,11 +63,11 @@ class UsersTest extends PHPUnit_Framework_TestCase
 
 	public function testDeleteUsersError()
 	{
-		$result = $this->model->deleteUsers( ['params' => '111HASH111'] );
-		$this->assertNotInternalType('bool', $result);		
+		$result = $this->model->deleteUsers( ['params' => 'NOT_HASH'] );
 		$this->assertArrayHasKey('status', $result);
-		$this->assertArrayHasKey('code', $result);
+		$this->assertArrayNotHasKey('id', $result);
 		$this->assertCount(2, $result);
-		$this->assertTrue(count($result) > 0);
+		$this->assertFalse(count($result) == 0);
 	}
+
 }

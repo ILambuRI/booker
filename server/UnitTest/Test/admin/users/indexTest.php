@@ -13,15 +13,13 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 
 	public function tearDown()
 	{
-		$this->db->exec('DELETE FROM bookshop_users
-						 WHERE `login` = "Abracadabra"');
-		$this->db->exec('DELETE FROM bookshop_users
-						 WHERE `login` = "Abra cadabra"');
-		// $this->db->exec('DELETE FROM bookshop_authors
-		// 				 WHERE authorsName = "Abra cadabra"');
+		$this->db->exec('DELETE FROM booker_users
+						 WHERE `name` = "Abracadabra"');
+		$this->db->exec('DELETE FROM booker_users
+						 WHERE `name` = "Abra Cadabra"');
+						 
 		$this->model = NULL;
 		$this->db = NULL;
-
 	}
 	
 	public function testGetUsersByParamsTrue()
@@ -31,7 +29,7 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 		$this->assertArrayHasKey('id', $result[0]);
 		$this->assertTrue(count($result) > 0);
 
-		$result = $this->model->getUsersByParams( ['params' => ADMIN_HASH . '/1'] );
+		$result = $this->model->getUsersByParams( ['params' => ADMIN_HASH . '/5'] );
 		$this->assertArrayNotHasKey('status', $result);
 		$this->assertArrayHasKey('id', $result[0]);
 		$this->assertTrue(count($result) > 0);
@@ -56,12 +54,9 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 	{
 		$result = $this->model->postUsers( [
 			'hash' => ADMIN_HASH,
-			'login' => 'Abracadabra',
+			'name' => 'Abracadabra',
 			'password' => '12345',
-			'phone' => '0987654321',
-			'idDiscount' => 1,
-			'admin' => 0,
-			'active' => 0
+			'email' => 'mail@mail.mail'
 		] );
 		$this->assertNotInternalType('array', $result);
 		$this->assertInternalType('bool', $result);
@@ -72,12 +67,9 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 	{
 		$result = $this->model->postUsers( [
 			'hash' => ADMIN_HASH,
-			'login' => 'Abracadabra',
+			'name' => '1 Abracadabra 1',
 			'password' => '12345',
-			'phone' => 'AAAAAAAAA',
-			'idDiscount' => 1,
-			'admin' => 0,
-			'active' => 0
+			'email' => 'mail mail . mail'
 		] );
 		$this->assertArrayHasKey('status', $result);
 		$this->assertArrayNotHasKey('id', $result);
@@ -87,18 +79,16 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 
 	public function testPutUsersTrue()
 	{
-		$this->db->exec('INSERT INTO bookshop_users (login, password, phone, id_discount, hash, lifetime, admin, active)
-                		 VALUES ("Abra cadabra", "password", 111111, 1, "hash", 111111, 0, 0)');
-		$id = $this->db->lastId();								 
+		$this->db->exec( "INSERT INTO booker_users (name, email, password, hash)
+  						  VALUES ('Abracadabra', 'mail@mail.mail', '12345', 'BUM')" );
+		$id = $this->db->lastId();
+
 		$result = $this->model->putUsers( [
 			'hash' => ADMIN_HASH,
 			'id' => $id,
-			'login' => 'Abracadabra',
+			'name' => 'Abra Cadabra',
 			'password' => '12345',
-			'phone' => '0987654321',
-			'idDiscount' => 1,
-			'admin' => 0,
-			'active' => 0
+			'email' => 'mailmail@mail.mail',
 		] );
 		$this->assertNotInternalType('array', $result);
 		$this->assertInternalType('bool', $result);
@@ -110,16 +100,35 @@ class AdminUsersTest extends PHPUnit_Framework_TestCase
 		$result = $this->model->putUsers( [
 			'hash' => ADMIN_HASH,
 			'id' => 000,
-			'login' => 'Abracadabra',
+			'name' => 'Abra 111 Cadabra',
 			'password' => '12345',
-			'phone' => 'AAAAAAAAA',
-			'idDiscount' => 1,
-			'admin' => 0,
-			'active' => 0
+			'email' => 'mail mail.mail',
 		] );
 		$this->assertArrayHasKey('status', $result);
 		$this->assertArrayNotHasKey('id', $result);
 		$this->assertCount(2, $result);
 		$this->assertFalse(count($result) == 0);
 	}
+
+	public function testDeleteUsersTrue()
+	{
+		$this->db->exec( "INSERT INTO booker_users (name, email, password, hash)
+  						  VALUES ('Abracadabra', 'mail@mail.mail', '12345', 'BUM')" );
+		$id = $this->db->lastId();
+
+		$result = $this->model->deleteUsers( ['params' => ADMIN_HASH . '/' . $id] );
+		$this->assertNotInternalType('array', $result);
+		$this->assertInternalType('bool', $result);
+		$this->assertTrue($result);
+	}
+
+	public function testDeleteUsersError()
+	{
+		$result = $this->model->deleteUsers( ['params' => ADMIN_HASH . '/000'] );
+		$this->assertArrayHasKey('status', $result);
+		$this->assertArrayNotHasKey('id', $result);
+		$this->assertCount(2, $result);
+		$this->assertFalse(count($result) == 0);
+	}
+
 }

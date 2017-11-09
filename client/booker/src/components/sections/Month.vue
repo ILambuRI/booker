@@ -2,7 +2,7 @@
   <tbody>
     <tr v-for="(week, key) in monthArr" :key="key">
       <td v-for="(day, key) in week" :key="key">
-        <day :day="day" :timeFormat='timeFormat' :user="user"></day>
+        <day :day="day" :timeFormat='timeFormat' :user="user" @windowClosed="windowClosed" :selectedRoomId="selectedRoomId"></day>
       </td>
     </tr>
   </tbody>
@@ -19,10 +19,16 @@ export default {
     }
   },
 
-  props:['monthArr', 'timeFormat', 'user'],
+  props:['monthArr', 'timeFormat', 'user', 'selectedRoomId'],
 
   components:{
     Day
+  },
+
+  methods: {
+    windowClosed() {
+      this.$emit('windowClosed')
+    }
   }
 }  
 </script>

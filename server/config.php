@@ -30,7 +30,7 @@ spl_autoload_register('autoloadClass');
 // else
 // {
 //     define('M_DB','test_booker');
-//     define('ADMIN_HASH','f82468c5e5e449cdce6f4595aef3cd78');
+//     define('ADMIN_HASH','b8a5360c2e5d95b20094a0fc77aff2bd');
 // }
 
 // define('ERROR_CODE_INFORMATION', 'http://booker/server/ErrorCodeInformation.html');

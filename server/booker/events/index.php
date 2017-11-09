@@ -18,7 +18,7 @@ class Events
     }
     
     /**
-     * Get all events in the range for room.
+     * Receive all events for the room by year and month.
      * id/month/year - input.
      * @return array
      */
@@ -42,16 +42,15 @@ class Events
         $sqlParams['end'] = $dateEnd->getTimestamp();
 
         
-        $sql = 'SELECT
-                booker_events.id,
-                booker_events.user_id,
-                booker_events.room_id,
-                booker_events.`desc`,
-                booker_events.start,
-                booker_events.end,
-                booker_events.created,
-                booker_events.event_id,
-                booker_users.name
+        $sql = 'SELECT booker_events.id,
+                       booker_events.user_id,
+                       booker_events.room_id,
+                       booker_events.`desc`,
+                       booker_events.start,
+                       booker_events.end,
+                       booker_events.created,
+                       booker_events.event_id,
+                       booker_users.name
                 FROM booker_events
                 INNER JOIN booker_rooms
                     ON booker_events.room_id = booker_rooms.id

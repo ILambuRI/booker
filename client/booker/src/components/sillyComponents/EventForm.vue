@@ -162,7 +162,7 @@
           </div>
 
           <!-- Update/Delete recurring checkbox -->
-          <div v-if="eventDetail && eventDetail.event_id && eventDetail.event_id.length > 0" class="form-check">
+          <div v-if="btnDetailAccess && eventDetail && eventDetail.event_id && eventDetail.event_id.length > 0" class="form-check">
             <label class="form-check-label">
               <input type="checkbox" class="form-check-input" v-model="recurringApplyOccurrences">
               Apply to all occurrences ?
@@ -173,10 +173,10 @@
           <button v-if="!eventDetail" @click="saveEvent()" class="float-left btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#eventInformation">
             Submit
           </button>
-          <button v-if="eventDetail && btnDetailAccess" class="float-left btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#deleteConfirm">
+          <button v-if="eventDetail && btnDetailAccess" @click="errorMsg = ''" class="float-left btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#deleteConfirm">
             Delete
           </button>
-          <button v-if="eventDetail && btnDetailAccess" @click="updateEvent()" class="float-right btn btn-dark" :disabled="!validBtnAccess">
+          <button v-if="eventDetail && btnDetailAccess" @click="errorMsg = ''" class="float-right btn btn-dark" :disabled="!validBtnAccess" data-toggle="modal" data-target="#updateConfirm">
             Update
           </button>
       </div>
@@ -213,7 +213,6 @@
       </div>
     </div>
 
-
     <!-- Modal Delete -->
     <div class="modal fade" id="deleteConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
@@ -247,11 +246,44 @@
       </div>
     </div>
 
+    <!-- Modal Update -->
+    <div class="modal fade" id="updateConfirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Delete Confirm</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div v-if="errorMsg" class="alert alert-danger">
+            <strong>{{errorMsg}}</strong>
+          </div>
+          <div v-else class="modal-body">
+            Are you sure ?
+          </div>
+
+          <div v-if="eventUpdated && eventUpdated[0].start" v-for="(event, index) in eventUpdated" :key="index" class="alert alert-info">
+            <p>
+              {{ index + 1 }}. Event from <strong>{{ event.start }}</strong> to <strong>{{ event.end }}</strong> on {{ event.created }} - <strong>{{ event.success }}</strong>
+            </p>
+            <p>
+              <strong>Description: </strong>{{ event.desc }}</strong>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button v-if="!errorMsg" @click="updateEvent()" type="button" class="btn btn-primary">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 <script>
   export default {
-    props: ["user", 'timeInterval', "eventDetail", "eventSubmited", "eventDeleted"],
+    props: ["user", 'timeInterval', "eventDetail", "eventSubmited", "eventDeleted", "eventUpdated"],
   
     data() {
       return {
@@ -327,11 +359,6 @@
         this.selectedUserId = this.user.id
       }
 
-        // else if (this.eventDetail && this.eventDetail.desc && this.eventDetail.desc.length > 0) {
-        //   this.allUsers.push( {name: this.eventDetail.user_name, id: this.eventDetail.user_id} )
-        //   this.selectedUserId = this.eventDetail.user_id
-        // }
-      /* PROBLEM */
       if (this.user.admin == 1) {
         this.getAllUsers()
       }
@@ -494,6 +521,7 @@
       },
 
       updateEvent() {
+        this.errorMsg = 'Result:'
         let updateParams = {
           userId: this.selectedUserId,
           desc: this.description,

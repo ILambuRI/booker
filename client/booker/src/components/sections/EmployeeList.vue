@@ -21,8 +21,8 @@
       <tbody>
         <tr v-for="(user, key) in allUsers" :key="key">
           <th scope="row"> {{ user.id }} </th>
-          <td> {{ user.name }} </td>
-          <td> {{ user.email }} </td>
+          <td><a :href="'mailto:'+ user.email"> {{ user.name }} </a></td>
+          <td><a :href="'mailto:'+ user.email"> {{ user.email }} </a></td>
           <td>
             <router-link :to="'/admin/edit-user/' + user.id">
               <button type="button" class="btn btn-secondary">Edit</button>

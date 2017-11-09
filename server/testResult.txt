@@ -1,0 +1,11 @@
+$ ./vendor/bin/phpunit --bootstrap bootstrap.php
+PHPUnit 5.7.23 by Sebastian Bergmann and contributors.
+
+Runtime:       PHP 5.6.23
+Configuration: E:\OpenServer\domains\booker\server\UnitTest\phpunit.xml
+
+.............................                                     29 / 29 (100%)
+
+Time: 267 ms, Memory: 4.50MB
+
+OK (29 tests, 118 assertions)

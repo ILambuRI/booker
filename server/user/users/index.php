@@ -18,52 +18,6 @@ class Users
     {
         $this->db = new Db();
     }
-    
-    /**
-     * /name - check for the existence of a name in the table.
-     * /null(or false)/email - Check for the existence of email in the table.
-     * @return bool
-     */
-    public function getUsersByParams($params)
-    {
-        list($arrParams['name'],
-             $arrParams['email']
-        ) = explode('/', $params['params'], 3);
-        
-        if ( ($arrParams['name'] != 'false' && $arrParams['name'] != 'null' && $arrParams['name'] != null)
-             &&
-             ($arrParams['email'] == 'false' || $arrParams['email'] == 'null' ||  $arrParams['email'] == null) )
-        {
-            if ( !Validate::checkName($arrParams['name']) )
-                return $this->error(406, 3);
-
-            $sql = 'SELECT name FROM booker_users WHERE name = :name';
-            $result = $this->db->execute($sql, ['name' => $arrParams['name']]);
-            
-            if (!$result)
-                return $this->error();
-
-            return TRUE;
-        }
-
-        if ( ($arrParams['email'] != 'false' && $arrParams['email'] != 'null' && $arrParams['email'] != null)
-             &&
-             ($arrParams['name'] == 'false' || $arrParams['name'] == 'null' ||  $arrParams['name'] == null) )
-        {
-            if ( !Validate::checkEmail($arrParams['email']) )
-                return $this->error(406, 4);
-
-            $sql = 'SELECT email FROM booker_users WHERE email = :email';
-            $result = $this->db->execute($sql, ['email' => $arrParams['email']]);
-            
-            if (!$result)
-                return $this->error();
-
-            return TRUE;
-        }
-
-        return $this->error(404, 5);
-    }
 
     /**
      * Login - user authorization, if it is in the table,

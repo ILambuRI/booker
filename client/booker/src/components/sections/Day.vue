@@ -32,7 +32,7 @@ export default {
     }
   },
 
-  props:['day', 'timeFormat', 'user'],
+  props:['day', 'timeFormat', 'user', 'selectedRoomId'],
 
   filters: {
     formatTime(value, timeFormat) {
@@ -49,9 +49,9 @@ export default {
 
   methods: {
     newWindow(id) {
-      var new_window = window.open('/#/event/detail/' + id + '/' + this.timeFormat, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
-      // var new_window = window.open('some url')
-      new_window.onbeforeunload = function(){ console.log('JOPA') }
+      // var newWindow = window.open('/#/event/detail/' + id + '/' + this.timeFormat + '/' + this.selectedRoomId, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
+      var newWindow = window.open(WINDOW_OPEN_URL + id + '/' + this.timeFormat + '/' + this.selectedRoomId, 'Event Details','left=200,top=100,width=1000,height=800,toolbar=1,resizable=0')
+      newWindow.onbeforeunload = () => { this.$emit('windowClosed') }
     }
   }
 }
