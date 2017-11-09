@@ -98,7 +98,7 @@ class UserEvents
                 'end' => $params['timeEnd'],
                 'desc' => $params['desc']
             ];
-            
+           
             if ( DbCheck::eventAvailable($this->db, $params['roomId'], $params['timeStart'], $params['timeEnd']) ) {
                 $sql = 'INSERT INTO booker_events (user_id, room_id, `desc`, start, end, created)
                         VALUES (:userId, :roomId, :desc, :timeStart, :timeEnd, :timeCreate)';
