@@ -7,6 +7,25 @@
     <title>Documentation</title>
 </head>
 <body>
+    <h3>Facilities:</h3>
+    <p><strong>Response:</strong></p>
+    <p>
+        Response and error response is always 200 in JSON by default. <br>
+        Response with received data in JSON: {"data":[{"id":"1","name":"Room 1"}],"server":{"status":200,"msg":"OK"}} <br>
+        Error in JSON: {"server":{"status":405,"code":"1","information":"http://booker/server/ErrorCodeInformation.html"}} <br>
+        If you want to receive error responses and error code in headers, add this to the end of the query <strong>"?response_type_head=true"</strong>.
+    </p>
+
+    <p><strong>Formats:</strong></p>
+    <p>
+        You can also get the response in different formats. <br>
+        Add the desired format to the end of the request: <br>
+        <strong>.json(default)</strong> - receive response in JSON format. <br>
+        <strong>.xml</strong> - receive response in XML format. <br>
+        <strong>.txt</strong> - receive text response. <br>
+        <strong>.xhtml</strong> - receive HTML page. <br>
+    </p>
+
     <h3>Admin:</h3>
     <p><strong>users:</strong></p>
     <p>

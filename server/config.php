@@ -24,7 +24,6 @@ spl_autoload_register('autoloadClass');
 // define('M_HOST','localhost');
 // define('M_USER','root');
 // define('M_PASS','');
-
 // if (PHP_SAPI !== 'cli')
 //     define('M_DB','booker');
 // else
@@ -32,7 +31,6 @@ spl_autoload_register('autoloadClass');
 //     define('M_DB','test_booker');
 //     define('ADMIN_HASH','b8a5360c2e5d95b20094a0fc77aff2bd');
 // }
-
 // define('ERROR_CODE_INFORMATION', 'http://booker/server/ErrorCodeInformation.html');
 
 /* MySql Class */
@@ -43,6 +41,7 @@ define('M_DB','user10');
 define('ERROR_CODE_INFORMATION', 'http://192.168.0.15/~user10/booker/server/ErrorCodeInformation.html');
 
 /* SERVICE */
+/* .json | .txt | .xml | .xhtml */
 define('DEFAULT_TYPE', '.json');
 
 /* ERRORs */

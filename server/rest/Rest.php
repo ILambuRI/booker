@@ -11,12 +11,13 @@ class Rest
 	/** Method name */
 	protected $method;
 
-	/** Table name in the database */
+	/** Table name in the database (or alias) for working with methods in model*/
 	public $table;
 
 	/** Data handler object before response */
 	protected $handler;
 
+	/** Run-time model object */
 	protected $model;
 
 	public function __construct($model)

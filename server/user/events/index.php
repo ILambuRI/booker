@@ -41,7 +41,7 @@ class UserEvents
                        booker_events.event_id,
                        booker_users.name as user_name
                 FROM booker_events
-                INNER JOIN booker_users
+                LEFT JOIN booker_users
                     ON booker_events.user_id = booker_users.id
                 WHERE booker_events.id = :id';
 

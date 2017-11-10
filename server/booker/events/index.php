@@ -54,7 +54,7 @@ class Events
                 FROM booker_events
                 INNER JOIN booker_rooms
                     ON booker_events.room_id = booker_rooms.id
-                INNER JOIN booker_users
+                LEFT JOIN booker_users
                     ON booker_events.user_id = booker_users.id
                 WHERE booker_events.start BETWEEN :start AND :end
                 AND booker_events.room_id = :id';
