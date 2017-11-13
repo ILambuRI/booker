@@ -103,7 +103,7 @@ class Handler
 	{
 		$this->setHeaders($this->code);			
 
-		return $this->converting($data);
+		return $this->converting( ['data' => $data] );
 	}
 
 	/** 

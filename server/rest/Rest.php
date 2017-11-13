@@ -5,7 +5,7 @@ use lib\services\Validate;
 
 class Rest
 {
-	/** Parameters from the URL */
+	/** Parameters from the client */
 	protected $params;
 
 	/** Method name */
@@ -101,14 +101,30 @@ class Rest
 		{
 			$result = $this->model->{$this->method}($this->params);
 
-			if ( is_array($result) && $result['status'] )
+			if ( is_array($result) && $result['code'] )
+			{
+				/* Error */
 				$this->response('', $result['status'], $result['code']);
+			}
+			elseif ( is_array($result) && array_key_exists('data', $result) )
+			{
+				/* Special response (201, 202 etc.) */
+				$this->response($result['data'], $result['status']);
+			}
 			elseif ( is_array($result) )
+			{
+				/* Response 200 whith data */
 				$this->response($result);
+			}
 			elseif ($result === TRUE)
+			{
+				/* Response 200 without data */
 				$this->response();
+			}
 		}
 		else
+		{
 			$this->response('', 405, '1');
+		}
     }
 }
